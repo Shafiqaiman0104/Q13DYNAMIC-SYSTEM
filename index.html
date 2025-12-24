@@ -879,6 +879,9 @@
                             <th>Bill Code</th>
                             <th>Delivery</th>
                             <th>UserId</th>
+                            <th>Commission</th>
+                            <th>Supplier</th>
+                            <th>Profit</th>
                             <th>Remark</th>
                             <th>Actions</th>
                         </tr>
@@ -2284,35 +2287,54 @@ function deleteSupplier(supplierCode) {
             }
         }
 
-        // Display orders data in table - FIXED with all columns
-        function displayOrdersData() {
-            const tableBody = document.getElementById('orders-table-body');
-            const loadingElement = document.getElementById('orders-loading');
-            const tableElement = document.getElementById('orders-table');
-            
-            // Clear existing rows
-            tableBody.innerHTML = '';
-            
-            // Show loading, hide table
-            loadingElement.style.display = 'flex';
-            tableElement.style.display = 'none';
-            
-            // Check if we have data
-            if (!ordersData || ordersData.length === 0) {
-                tableBody.innerHTML = `
-                    <tr>
-                        <td colspan="17" style="text-align: center; padding: 2rem;">
-                            <i class="fas fa-exclamation-circle" style="font-size: 2rem; color: #6c757d; margin-bottom: 1rem;"></i>
-                            <p>No orders data available.</p>
-                        </td>
-                    </tr>
-                `;
-                
-                // Hide loading, show table
-                loadingElement.style.display = 'none';
-                tableElement.style.display = 'table';
-                return;
+let isDisplayingOrders = false;
+
+async function displayOrdersData() {
+    // Prevent multiple simultaneous calls
+    if (isDisplayingOrders) {
+        console.log('Already displaying orders, skipping...');
+        return;
+    }
+    
+    isDisplayingOrders = true;
+    
+    try {
+        const tableBody = document.getElementById('orders-table-body');
+        const loadingElement = document.getElementById('orders-loading');
+        const tableElement = document.getElementById('orders-table');
+        
+        // Clear existing rows
+        tableBody.innerHTML = '';
+        
+        // Show loading, hide table
+        loadingElement.style.display = 'flex';
+        tableElement.style.display = 'none';
+        
+        // Make sure suppliers data is loaded
+        if (!suppliersData || suppliersData.length === 0) {
+            try {
+                suppliersData = await fetchSuppliersData();
+            } catch (error) {
+                console.error('Failed to load suppliers data:', error);
             }
+        }
+        
+        // Check if we have data
+        if (!ordersData || ordersData.length === 0) {
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="20" style="text-align: center; padding: 2rem;">
+                        <i class="fas fa-exclamation-circle" style="font-size: 2rem; color: #6c757d; margin-bottom: 1rem;"></i>
+                        <p>No orders data available.</p>
+                    </td>
+                </tr>
+            `;
+            
+            // Hide loading, show table
+            loadingElement.style.display = 'none';
+            tableElement.style.display = 'table';
+            return;
+        }
             
             // Populate table with orders data
             ordersData.forEach(order => {
@@ -2341,45 +2363,64 @@ function deleteSupplier(supplierCode) {
                 const email = escapeHtml(order.Email || 'N/A');
                 const contactInfo = `${phone}<br><small>${email}</small>`;
                 const address = escapeHtml(order.Address || 'N/A');
-                const productCode = escapeHtml(order['Product Code'] || 'N/A');
+                const productCode = escapeHtml(order['Product Code'] || '');
                 const productName = escapeHtml(order['Product Name'] || 'N/A');
                 const productInfo = `${productCode}<br><small>${productName}</small>`;
-                const productQuantity = escapeHtml(order['Product Quantity'] || '1');
-                const postageFee = parseFloat(order['Postage Fee'] || 0).toFixed(2);
+                const productQuantity = parseInt(order['Product Quantity']) || 1;
+                const postageFee = parseFloat(order['Postage Fee'] || 0);
                 const note = escapeHtml(order.Note || 'N/A');
                 const discountCode = escapeHtml(order['Discount Code'] || 'N/A');  // ADD THIS LINE
                 const spinPrize = escapeHtml(order['Spin Prize'] || 'N/A');
-                const total = parseFloat(order.Total || 0).toFixed(2);
+                const total = parseFloat(order.Total || 0);
                 const billCode = escapeHtml(order['Bill Code'] || 'N/A');
                 const userId = escapeHtml(order.UserId || 'N/A');
                 const remark = escapeHtml(order.Remark || 'N/A');
+
+// Get inch size from suppliers data for commission calculation
+const inch = getProductInch(productCode, suppliersData);
+
+// Calculate commission
+const commissionRate = getCommissionRate(productCode, inch);
+const commission = commissionRate * productQuantity;
+
+// Calculate supplier cost
+const supplierCost = getSupplierCost(productCode, suppliersData);
+const supplierTotal = supplierCost * productQuantity;
+
+// Calculate profit: Total - Postage - Rm1(toyyibpay fee) - Commission - Supplier
+const toyyibpayFee = 1; // RM1 per order for payment gateway
+const profit = total - postageFee - toyyibpayFee - commission - supplierTotal;
                 
-                row.innerHTML = `
-                    <td>${timestamp}</td>
-                    <td>${name}</td>
-                    <td>${contactInfo}</td>
-                    <td><div class="compact-text" title="${address}">${address}</div></td>
-                    <td>${productInfo}</td>
-                    <td>${productQuantity}</td>
-                    <td>RM ${postageFee}</td>
-                    <td><div class="compact-text" title="${note}">${note}</div></td>
-                    <td>${discountCode}</td>
-                    <td>${spinPrize}</td>
-                    <td>RM ${total}</td>
-                    <td><span class="status ${paymentStatusClass}">${paymentStatus}</span></td>
-                    <td>${billCode}</td>
-                    <td><span class="status ${deliveryClass}">${deliveryStatus}</span></td>
-                    <td>${userId}</td>
-                    <td><div class="compact-text" title="${remark}">${remark}</div></td>
-                    <td>
-                        <button class="action-btn edit" onclick="editOrder('${billCode}')">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="action-btn delete" onclick="deleteOrder('${billCode}')">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                `;
+               row.innerHTML = `
+    <td>${timestamp}</td>
+    <td>${name}</td>
+    <td>${contactInfo}</td>
+    <td><div class="compact-text" title="${address}">${address}</div></td>
+    <td>${productInfo}</td>
+    <td>${productQuantity}</td>
+    <td>RM ${postageFee.toFixed(2)}</td>
+    <td><div class="compact-text" title="${note}">${note}</div></td>
+    <td>${discountCode}</td>
+    <td>${spinPrize}</td>
+    <td>RM ${total.toFixed(2)}</td>
+    <td><span class="status ${paymentStatusClass}">${paymentStatus}</span></td>
+    <td>${billCode}</td>
+    <td><span class="status ${deliveryClass}">${deliveryStatus}</span></td>
+    <td>${userId}</td>
+    <!-- ADD THESE 3 COLUMNS HERE -->
+    <td>RM ${commission.toFixed(2)}</td>
+    <td>RM ${supplierTotal.toFixed(2)}</td>
+    <td>RM ${profit.toFixed(2)}</td>
+    <td><div class="compact-text" title="${remark}">${remark}</div></td>
+    <td>
+        <button class="action-btn edit" onclick="editOrder('${billCode}')">
+            <i class="fas fa-edit"></i>
+        </button>
+        <button class="action-btn delete" onclick="deleteOrder('${billCode}')">
+            <i class="fas fa-trash"></i>
+        </button>
+    </td>
+`;
                 
                 tableBody.appendChild(row);
             });
@@ -2387,7 +2428,11 @@ function deleteSupplier(supplierCode) {
             // Hide loading, show table
             loadingElement.style.display = 'none';
             tableElement.style.display = 'table';
-        }
+        }finally {
+        // Always reset the flag
+        isDisplayingOrders = false;
+    }
+}
 
         // Display agents data in table - FIXED email issue
         function displayAgentsData() {
