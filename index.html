@@ -865,6 +865,7 @@
                             <th>Qty</th>
                             <th>Postage</th>
                             <th>Note</th>
+                            <th>Discount Code</th>
                             <th>Spin Prize</th>
                             <th>Total</th>
                             <th>Payment</th>
@@ -1322,6 +1323,13 @@
                 </div>
             </div>
 
+<div class="form-row">
+    <div class="form-group">
+        <label class="form-label" for="edit-order-discount-code">Discount Code</label>
+        <input type="text" class="form-input" id="edit-order-discount-code" name="discountCode">
+    </div>
+</div>
+
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label" for="edit-order-total">Total (RM)</label>
@@ -1720,7 +1728,7 @@
             if (!ordersData || ordersData.length === 0) {
                 tableBody.innerHTML = `
                     <tr>
-                        <td colspan="16" style="text-align: center; padding: 2rem;">
+                        <td colspan="17" style="text-align: center; padding: 2rem;">
                             <i class="fas fa-exclamation-circle" style="font-size: 2rem; color: #6c757d; margin-bottom: 1rem;"></i>
                             <p>No orders data available.</p>
                         </td>
@@ -1766,6 +1774,7 @@
                 const productQuantity = escapeHtml(order['Product Quantity'] || '1');
                 const postageFee = parseFloat(order['Postage Fee'] || 0).toFixed(2);
                 const note = escapeHtml(order.Note || 'N/A');
+                const discountCode = escapeHtml(order['Discount Code'] || 'N/A');  // ADD THIS LINE
                 const spinPrize = escapeHtml(order['Spin Prize'] || 'N/A');
                 const total = parseFloat(order.Total || 0).toFixed(2);
                 const billCode = escapeHtml(order['Bill Code'] || 'N/A');
@@ -1781,6 +1790,7 @@
                     <td>${productQuantity}</td>
                     <td>RM ${postageFee}</td>
                     <td><div class="compact-text" title="${note}">${note}</div></td>
+                    <td>${discountCode}</td>
                     <td>${spinPrize}</td>
                     <td>RM ${total}</td>
                     <td><span class="status ${paymentStatusClass}">${paymentStatus}</span></td>
@@ -2125,6 +2135,7 @@ async function editOrder(billCode) {
         document.getElementById('edit-order-product-quantity').value = order.productQuantity || 1;
         document.getElementById('edit-order-postage-fee').value = order.postageFee || 0;
         document.getElementById('edit-order-note').value = order.customerNote || '';
+        document.getElementById('edit-order-discount-code').value = order.discountCode || '';
         document.getElementById('edit-order-spin-prize').value = order.spinPrize || '';
         document.getElementById('edit-order-total').value = order.totalPrice || 0;
         document.getElementById('edit-order-payment-status').value = order.paymentStatus || 'pending';
@@ -2181,6 +2192,7 @@ document.getElementById('editOrderForm').addEventListener('submit', async functi
         productQuantity: document.getElementById('edit-order-product-quantity').value,
         postageFee: document.getElementById('edit-order-postage-fee').value,
         note: document.getElementById('edit-order-note').value,
+        discountCode: document.getElementById('edit-order-discount-code').value,
         spinPrize: document.getElementById('edit-order-spin-prize').value,
         total: document.getElementById('edit-order-total').value,
         paymentStatus: document.getElementById('edit-order-payment-status').value,
