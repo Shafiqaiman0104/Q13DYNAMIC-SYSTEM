@@ -739,6 +739,9 @@
             <div class="tab" data-tab="orders">
                 <i class="fas fa-shopping-cart"></i> Customer Orders
             </div>
+<div class="tab" data-tab="sales-commission">
+        <i class="fas fa-chart-bar"></i> Sales & Commission
+    </div>
             <div class="tab" data-tab="agents">
                 <i class="fas fa-users"></i> Agents
             </div>
@@ -1043,7 +1046,50 @@
             </tbody>
         </table>
     </div>
-</div>                
+</div>   
+
+<!-- Sales & Commission Tab -->
+<div id="sales-commission" class="tab-content">
+    <div class="filters">
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="sales-search" placeholder="Search by UserId...">
+        </div>
+        <div>
+            <button class="action-btn" id="refresh-sales-btn">
+                <i class="fas fa-sync-alt"></i> Refresh Data
+            </button>
+            <button class="action-btn" id="export-sales-btn">
+                <i class="fas fa-download"></i> Export to CSV
+            </button>
+        </div>
+    </div>
+
+    <div class="data-table-container">
+        <div class="loading" id="sales-loading">
+            <div class="spinner"></div>
+            <p>Loading sales and commission data...</p>
+        </div>
+        <table class="data-table" id="sales-table" style="display: none;">
+            <thead>
+                <tr>
+                    <th>User ID</th>
+                    <th>Total Orders</th>
+                    <th>Total Qty Product</th>
+                    <th>Total Postage (RM)</th>
+                    <th>Total Discount Code (RM)</th>
+                    <th>Total Spin Prize (RM)</th>
+                    <th>Total Price (RM)</th>
+                    <th>Total Commission (RM)</th>
+                    <th>Total Profit (RM)</th>
+                </tr>
+            </thead>
+            <tbody id="sales-table-body">
+                <!-- Sales data will be populated here -->
+            </tbody>
+        </table>
+    </div>
+</div>             
 
         <!-- Edit Product Modal -->
         <div id="editProductModal" class="modal">
@@ -1412,6 +1458,33 @@
         let ordersChart = null;
         let isInitialLoad = true; // Track if this is the initial load
 
+// Commission rate configuration
+const COMMISSION_RATES = {
+    // Custom rates by product code
+    customRates: {
+        'B4': 10,
+        'SV115': 30,
+        'SV113': 30,
+        'SV106': 30,
+        'SV107': 30
+    },
+    // Common rates by inch size
+    commonRates: {
+        '4': 30,
+        '5': 30,
+        '6': 30,
+        '7': 40,
+        '8': 40,
+        '9': 40,
+        '10': 50,
+        '11': 60,
+        '12': 60,
+        '18': 70,
+        '22': 70,
+        '24': 70
+    }
+};
+
         // Helper function to escape HTML special characters
         function escapeHtml(text) {
             if (!text) return '';
@@ -1421,29 +1494,31 @@
         }
 
         // Tab switching - FIXED VERSION
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                // Remove active class from all tabs and content
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                
-                // Add active class to clicked tab and corresponding content
-                tab.classList.add('active');
-                const tabId = tab.getAttribute('data-tab');
-                document.getElementById(tabId).classList.add('active');
-                
-                // Always load data for the tab when clicked
-                if (tabId === 'orders') {
-                    displayOrdersData();
-                } else if (tabId === 'agents') {
-                    displayAgentsData();
-                } else if (tabId === 'products') {
-                    displayProductsData();
-                } else if (tabId === 'dashboard') {
-                    updateDashboardStats();
-                }
-            });
-        });
+document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        // Remove active class from all tabs and content
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        
+        // Add active class to clicked tab and corresponding content
+        tab.classList.add('active');
+        const tabId = tab.getAttribute('data-tab');
+        document.getElementById(tabId).classList.add('active');
+        
+        // Always load data for the tab when clicked
+        if (tabId === 'orders') {
+            displayOrdersData();
+        } else if (tabId === 'agents') {
+            displayAgentsData();
+        } else if (tabId === 'products') {
+            displayProductsData();
+        } else if (tabId === 'sales-commission') {
+            calculateAgentSales(); // Add this line
+        } else if (tabId === 'dashboard') {
+            updateDashboardStats();
+        }
+    });
+});
 
         // Initialize the dashboard
         document.addEventListener('DOMContentLoaded', async function() {
@@ -2008,7 +2083,46 @@
                 alert('Chart would update based on selected period.');
                 // In a real implementation, this would update the chart data
             });
+
+ // Sales search
+    const salesSearch = document.getElementById('sales-search');
+    salesSearch.addEventListener('input', function() {
+        filterSalesTable();
+    });
+    
+    // Refresh sales button
+    document.getElementById('refresh-sales-btn').addEventListener('click', function() {
+        calculateAgentSales();
+    });
+    
+    // Export sales button
+document.getElementById('export-sales-btn').addEventListener('click', async function() {
+    const agentSales = await calculateAgentSales();
+    exportSalesToCSV(agentSales);
+});
         }
+
+// Filter sales table based on search
+function filterSalesTable() {
+    const searchTerm = document.getElementById('sales-search').value.toLowerCase();
+    const rows = document.querySelectorAll('#sales-table-body tr');
+    
+    rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length === 0) return; // Skip empty rows
+        
+        const userId = cells[0].textContent.toLowerCase();
+        
+        const matchesSearch = !searchTerm || 
+            userId.includes(searchTerm);
+        
+        if (matchesSearch) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
 
         // Filter orders table based on search and filters
         function filterOrdersTable() {
@@ -2700,6 +2814,205 @@ async function confirmDeleteAgent() {
     } catch (error) {
         alert('Error deleting agent: ' + error.message);
     }
+}
+
+// Function to get commission rate for a product
+function getCommissionRate(productCode, inch) {
+    // Check custom rates first
+    if (COMMISSION_RATES.customRates[productCode]) {
+        return COMMISSION_RATES.customRates[productCode];
+    }
+    
+    // Check common rates by inch
+    if (inch && COMMISSION_RATES.commonRates[inch]) {
+        return COMMISSION_RATES.commonRates[inch];
+    }
+    
+    // Default rate if no match
+    return 0;
+}
+
+// Function to fetch product details by code
+async function getProductByCode(productCode) {
+    try {
+        const response = await fetch(`${PRODUCT_DATABASE_URL}?search=${encodeURIComponent(productCode)}&format=json`);
+        const result = await response.json();
+        
+        if (result.success && result.data && result.data.length > 0) {
+            return result.data.find(product => product.Code === productCode) || result.data[0];
+        }
+        return null;
+    } catch (error) {
+        console.error('Error fetching product:', error);
+        return null;
+    }
+}
+
+// Function to calculate agent sales and commissions
+async function calculateAgentSales() {
+    try {
+        const salesLoading = document.getElementById('sales-loading');
+        const salesTable = document.getElementById('sales-table');
+        const salesTableBody = document.getElementById('sales-table-body');
+        
+        // Show loading, hide table
+        salesLoading.style.display = 'flex';
+        salesTable.style.display = 'none';
+        salesTableBody.innerHTML = '';
+        
+        // Group orders by UserId
+        const agentSales = {};
+        
+        // Process each order
+        for (const order of ordersData) {
+            const userId = order.UserId || 'N/A';
+            
+            if (!agentSales[userId]) {
+                agentSales[userId] = {
+                    userId: userId,
+                    totalOrders: 0,
+                    totalQty: 0,
+                    totalPostage: 0,
+                    totalDiscount: 0,
+                    totalSpinPrize: 0,
+                    totalPrice: 0,
+                    totalCommission: 0,
+                    totalProfit: 0
+                };
+            }
+            
+            const agent = agentSales[userId];
+            
+            // Count each order (RM1 toyyibpay payment gateway fee per order)
+            agent.totalOrders += 1;
+            
+            // Add product quantity
+            const qty = parseInt(order['Product Quantity']) || 1;
+            agent.totalQty += qty;
+            
+            // Add postage fee
+            const postage = parseFloat(order['Postage Fee']) || 0;
+            agent.totalPostage += postage;
+            
+            // Add discount code (assuming it's an amount in RM)
+            const discount = parseFloat(order['Discount Code']) || 0;
+            agent.totalDiscount += discount;
+            
+            // Add spin prize (assuming it's an amount in RM)
+            const spinPrize = parseFloat(order['Spin Prize']) || 0;
+            agent.totalSpinPrize += spinPrize;
+            
+            // Add total price
+            const price = parseFloat(order.Total) || 0;
+            agent.totalPrice += price;
+            
+            // Calculate commission
+            const productCode = order['Product Code'] || '';
+            const product = await getProductByCode(productCode);
+            const inch = product ? product.Inch : null;
+            const commissionRate = getCommissionRate(productCode, inch);
+            const commission = commissionRate * qty;
+            
+            agent.totalCommission += commission;
+        }
+        
+        // Calculate profit for each agent
+Object.values(agentSales).forEach(agent => {
+    // Total Profit = Total Price - Total Orders (RM1 per order) - Total Commission - Total Postage
+    agent.totalProfit = agent.totalPrice - agent.totalOrders - agent.totalCommission - agent.totalPostage;
+});
+        
+        // Display the data
+        displayAgentSales(agentSales);
+
+ // Display the data
+        displayAgentSales(agentSales);
+        
+        // Return the data for export
+        return agentSales;
+        
+    } catch (error) {
+        console.error('Error calculating agent sales:', error);
+        showError(`Failed to calculate sales: ${error.message}`);
+
+return {};
+        
+        // Hide loading, show empty table
+        document.getElementById('sales-loading').style.display = 'none';
+        document.getElementById('sales-table').style.display = 'table';
+    }
+}
+
+// Function to display agent sales data
+function displayAgentSales(agentSales) {
+    const salesTableBody = document.getElementById('sales-table-body');
+    const salesLoading = document.getElementById('sales-loading');
+    const salesTable = document.getElementById('sales-table');
+    
+    // Clear existing rows
+    salesTableBody.innerHTML = '';
+    
+    // Convert object to array and sort by UserId
+    const agentsArray = Object.values(agentSales);
+    agentsArray.sort((a, b) => a.userId.localeCompare(b.userId));
+    
+    // Populate table
+    agentsArray.forEach(agent => {
+        const row = document.createElement('tr');
+        
+        row.innerHTML = `
+            <td><strong>${escapeHtml(agent.userId)}</strong></td>
+            <td>${agent.totalOrders}</td>
+            <td>${agent.totalQty}</td>
+            <td>RM ${agent.totalPostage.toFixed(2)}</td>
+            <td>RM ${agent.totalDiscount.toFixed(2)}</td>
+            <td>RM ${agent.totalSpinPrize.toFixed(2)}</td>
+            <td>RM ${agent.totalPrice.toFixed(2)}</td>
+            <td>RM ${agent.totalCommission.toFixed(2)}</td>
+            <td><strong>RM ${agent.totalProfit.toFixed(2)}</strong></td>
+        `;
+        
+        // Highlight profit column
+        const profitCell = row.cells[8];
+        if (agent.totalProfit > 0) {
+            profitCell.style.color = '#28a745';
+            profitCell.style.fontWeight = 'bold';
+        } else if (agent.totalProfit < 0) {
+            profitCell.style.color = '#dc3545';
+            profitCell.style.fontWeight = 'bold';
+        }
+        
+        salesTableBody.appendChild(row);
+    });
+    
+    // Hide loading, show table
+    salesLoading.style.display = 'none';
+    salesTable.style.display = 'table';
+}
+
+// Function to export sales data to CSV
+function exportSalesToCSV(agentSales) {
+    const agentsArray = Object.values(agentSales);
+    agentsArray.sort((a, b) => a.userId.localeCompare(b.userId));
+    
+    // CSV header
+    let csv = 'User ID,Total Orders,Total Qty Product,Total Postage (RM),Total Discount Code (RM),Total Spin Prize (RM),Total Price (RM),Total Commission (RM),Total Profit (RM)\n';
+    
+    // CSV data
+    agentsArray.forEach(agent => {
+        csv += `"${agent.userId}",${agent.totalOrders},${agent.totalQty},${agent.totalPostage.toFixed(2)},${agent.totalDiscount.toFixed(2)},${agent.totalSpinPrize.toFixed(2)},${agent.totalPrice.toFixed(2)},${agent.totalCommission.toFixed(2)},${agent.totalProfit.toFixed(2)}\n`;
+    });
+    
+    // Create download link
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `sales_commission_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
 }
     </script>
 </body>
