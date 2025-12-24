@@ -748,6 +748,10 @@
             <div class="tab" data-tab="products">
                 <i class="fas fa-box"></i> Products
             </div>
+<!-- Add this tab right after the Products tab -->
+<div class="tab" data-tab="suppliers">
+    <i class="fas fa-truck"></i> Supplier Database
+</div>
         </div>
 
         <!-- Dashboard Tab -->
@@ -1046,7 +1050,172 @@
             </tbody>
         </table>
     </div>
-</div>   
+</div> 
+
+<!-- Supplier Database Tab -->
+<div id="suppliers" class="tab-content">
+    <div class="filters">
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="supplier-search" placeholder="Search suppliers by name, code, or style...">
+        </div>
+        <button class="action-btn" id="add-supplier-btn">
+            <i class="fas fa-plus"></i> Add Supplier Product
+        </button>
+    </div>
+
+    <!-- Add Supplier Product Form -->
+    <div class="add-product-form" id="addSupplierForm">
+        <h3 style="margin-bottom: 1.5rem; color: var(--primary-color);">
+            <i class="fas fa-plus-circle"></i> Add New Supplier Product
+        </h3>
+        <form id="addSupplierFormFields">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="add-supplier-code">Product Code *</label>
+                    <input type="text" class="form-input" id="add-supplier-code" name="supplier_code" required 
+                           placeholder="e.g., SUP001">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="add-supplier-name">Product Name *</label>
+                    <input type="text" class="form-input" id="add-supplier-name" name="supplier_name" required 
+                           placeholder="e.g., Luxury Watch Supplier">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="add-supplier-shot">Shot Count</label>
+                    <input type="number" class="form-input" id="add-supplier-shot" name="supplier_shot" 
+                           min="0" placeholder="e.g., 100">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="add-supplier-style">Style</label>
+                    <select class="form-input" id="add-supplier-style" name="supplier_style">
+                        <option value="">Select Style</option>
+                        <option value="S">S</option>
+                        <option value="V">V</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="add-supplier-inch">Inch</label>
+                    <input type="number" class="form-input" id="add-supplier-inch" name="supplier_inch" 
+                           step="0.1" min="0" placeholder="e.g., 5.5">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="add-supplier-duration">Duration</label>
+                    <input type="text" class="form-input" id="add-supplier-duration" name="supplier_duration" 
+                           placeholder="e.g., 00:52">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="add-supplier-postage">Postage Fee (RM)</label>
+                    <input type="number" class="form-input" id="add-supplier-postage" name="supplier_postage" 
+                           step="0.01" min="0" value="0" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="add-supplier-rm_supplier">Rm (Supplier)</label>
+                    <input type="number" class="form-input" id="add-supplier-rm_supplier" name="supplier_rm_supplier" 
+                           step="0.01" min="0" placeholder="0.00">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="add-supplier-rm_agent">Rm (Agent)</label>
+                    <input type="number" class="form-input" id="add-supplier-rm_agent" name="supplier_rm_agent" 
+                           step="0.01" min="0" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="add-supplier-rm_market">Rm (Market)</label>
+                    <input type="number" class="form-input" id="add-supplier-rm_market" name="supplier_rm_market" 
+                           step="0.01" min="0" placeholder="0.00">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="add-supplier-profit_direct_supplier">Profit (Direct Supplier)</label>
+                    <input type="number" class="form-input" id="add-supplier-profit_direct_supplier" name="supplier_profit_direct_supplier" 
+                           step="0.01" min="0" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="add-supplier-profit_agent">Profit (Agent)</label>
+                    <input type="number" class="form-input" id="add-supplier-profit_agent" name="supplier_profit_agent" 
+                           step="0.01" min="0" placeholder="0.00">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="add-supplier-profit_from_agent">Profit (From Agent)</label>
+                    <input type="number" class="form-input" id="add-supplier-profit_from_agent" name="supplier_profit_from_agent" 
+                           step="0.01" min="0" placeholder="0.00">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="add-supplier-image">Image URL</label>
+                <input type="url" class="form-input" id="add-supplier-image" name="supplier_image" 
+                       placeholder="https://example.com/image.jpg">
+                <div class="url-preview" id="add-supplier-image-preview"></div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="add-supplier-video">Video URL</label>
+                <input type="url" class="form-input" id="add-supplier-video" name="supplier_video" 
+                       placeholder="https://example.com/video.mp4">
+                <div class="url-preview" id="add-supplier-video-preview"></div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" id="cancel-add-supplier">
+                    Cancel
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Save Supplier Product
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="data-table-container">
+        <div class="loading" id="suppliers-loading">
+            <div class="spinner"></div>
+            <p>Loading supplier data...</p>
+        </div>
+        <table class="data-table" id="suppliers-table" style="display: none;">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Shot</th>
+                    <th>Style</th>
+                    <th>Inch</th>
+                    <th>Duration</th>
+                    <th>Postage</th>
+                    <th>Rm (Supplier)</th>
+                    <th>Rm (Agent)</th>
+                    <th>Rm (Market)</th>
+                    <th>Profit (Direct Supplier)</th>
+                    <th>Profit (Agent)</th>
+                    <th>Profit (From Agent)</th>
+                    <th>Image</th>
+                    <th>Video</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="suppliers-table-body">
+                <!-- Supplier data will be populated here -->
+            </tbody>
+        </table>
+    </div>
+</div>  
 
 <!-- Sales & Commission Tab -->
 <div id="sales-commission" class="tab-content">
@@ -1185,6 +1354,130 @@
                 </div>
             </div>
         </div>
+
+<!-- Edit Supplier Modal -->
+<div id="editSupplierModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">Edit Supplier Product</h3>
+            <button class="close-btn" onclick="closeEditSupplierModal()">&times;</button>
+        </div>
+        <form id="editSupplierForm">
+            <input type="hidden" id="edit-supplier-code" name="supplier_code">
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="edit-supplier-name">Product Name *</label>
+                    <input type="text" class="form-input" id="edit-supplier-name" name="supplier_name" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="edit-supplier-shot">Shot Count</label>
+                    <input type="number" class="form-input" id="edit-supplier-shot" name="supplier_shot" min="0">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="edit-supplier-style">Style</label>
+                    <select class="form-input" id="edit-supplier-style" name="supplier_style">
+                        <option value="S">S</option>
+                        <option value="V">V</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="edit-supplier-inch">Inch</label>
+                    <input type="number" class="form-input" id="edit-supplier-inch" name="supplier_inch" step="0.1" min="0">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="edit-supplier-duration">Duration</label>
+                    <input type="text" class="form-input" id="edit-supplier-duration" name="supplier_duration" placeholder="e.g., 00:52">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="edit-supplier-postage">Postage Fee (RM)</label>
+                    <input type="number" class="form-input" id="edit-supplier-postage" name="supplier_postage" step="0.01" min="0">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="edit-supplier-rm_supplier">Rm (Supplier)</label>
+                    <input type="number" class="form-input" id="edit-supplier-rm_supplier" name="supplier_rm_supplier" step="0.01" min="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="edit-supplier-rm_agent">Rm (Agent)</label>
+                    <input type="number" class="form-input" id="edit-supplier-rm_agent" name="supplier_rm_agent" step="0.01" min="0">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="edit-supplier-rm_market">Rm (Market)</label>
+                    <input type="number" class="form-input" id="edit-supplier-rm_market" name="supplier_rm_market" step="0.01" min="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="edit-supplier-profit_direct_supplier">Profit (Direct Supplier)</label>
+                    <input type="number" class="form-input" id="edit-supplier-profit_direct_supplier" name="supplier_profit_direct_supplier" step="0.01" min="0">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="edit-supplier-profit_agent">Profit (Agent)</label>
+                    <input type="number" class="form-input" id="edit-supplier-profit_agent" name="supplier_profit_agent" step="0.01" min="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="edit-supplier-profit_from_agent">Profit (From Agent)</label>
+                    <input type="number" class="form-input" id="edit-supplier-profit_from_agent" name="supplier_profit_from_agent" step="0.01" min="0">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="edit-supplier-code-display">Product Code *</label>
+                    <input type="text" class="form-input" id="edit-supplier-code-display" name="supplier_code_display" required disabled>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="edit-supplier-image">Image URL</label>
+                <input type="url" class="form-input" id="edit-supplier-image" name="supplier_image" placeholder="https://example.com/image.jpg">
+                <div class="url-preview" id="edit-supplier-image-preview"></div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="edit-supplier-video">Video URL</label>
+                <input type="url" class="form-input" id="edit-supplier-video" name="supplier_video" placeholder="https://example.com/video.mp4">
+                <div class="url-preview" id="edit-supplier-video-preview"></div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeEditSupplierModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Update Supplier Product</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Supplier Confirmation Modal -->
+<div id="deleteSupplierModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">Delete Supplier Product</h3>
+            <button class="close-btn" onclick="closeDeleteSupplierModal()">&times;</button>
+        </div>
+        <div class="form-group">
+            <p id="delete-supplier-confirm-text">Are you sure you want to delete this supplier product?</p>
+            <input type="hidden" id="delete-supplier-code">
+        </div>
+        <div class="form-actions">
+            <button type="button" class="btn btn-secondary" onclick="closeDeleteSupplierModal()">Cancel</button>
+            <button type="button" class="btn btn-danger" onclick="confirmDeleteSupplier()">Delete Supplier Product</button>
+        </div>
+    </div>
+</div>
 
 <!-- Add Agent Modal -->
 <div id="addAgentModal" class="modal">
@@ -1450,13 +1743,17 @@
         const ORDER_DATABASE_URL = 'https://script.google.com/macros/s/AKfycbxhuHO7-6fGOIS-BF9kUYHIBNzPVspo3MTyRIZvZnRY0WzuYOavP_gPoG_OJyuTShPq/exec';
         const AGENT_DATABASE_URL = 'https://script.google.com/macros/s/AKfycbwL86AaXKMwV7FBIQMcXCTt9qlCHDvi2Ftqzr-u5ePJGdgzMqqVWFQwdbXMRET8cldY/exec';
         const PRODUCT_DATABASE_URL = 'https://script.google.com/macros/s/AKfycbz1tnkvEKaOIi2k76YVws_OiItN8LJ_EMtv1VPkghOu71NJwlCDEBocIw2sneQE7xSRZQ/exec';
+// Add this line with your other URL constants
+        const SUPPLIER_DATABASE_URL = 'https://script.google.com/macros/s/AKfycbwYsRYtwcstQ1TbK0m8QyUBFmNydDQ2K-C8U1ANjZ4AZNySPsJI2el6QHFklWQ35Vb7/exec';
 
         // Global variables for data
         let ordersData = [];
         let agentsData = [];
         let productsData = [];
+        let suppliersData = [];
         let ordersChart = null;
         let isInitialLoad = true; // Track if this is the initial load
+        
 
 // Commission rate configuration
 const COMMISSION_RATES = {
@@ -1511,8 +1808,10 @@ document.querySelectorAll('.tab').forEach(tab => {
         } else if (tabId === 'agents') {
             displayAgentsData();
         } else if (tabId === 'products') {
-            displayProductsData();
-        } else if (tabId === 'sales-commission') {
+            displayProductsData(); 
+        } else if (tabId === 'suppliers') {
+            displaySuppliersData();
+        }else if (tabId === 'sales-commission') {
             calculateAgentSales(); // Add this line
         } else if (tabId === 'dashboard') {
             updateDashboardStats();
@@ -1520,64 +1819,74 @@ document.querySelectorAll('.tab').forEach(tab => {
     });
 });
 
-        // Initialize the dashboard
-        document.addEventListener('DOMContentLoaded', async function() {
-            try {
-                // Load initial data for dashboard
-                console.log('Loading data from Google Sheets...');
-                
-                // Fetch all data in parallel
-                const [ordersResult, agentsResult, productsResult] = await Promise.allSettled([
-                    fetchOrdersData(),
-                    fetchAgentsData(),
-                    fetchProductsData()
-                ]);
-                
-                // Handle orders data
-                if (ordersResult.status === 'fulfilled') {
-                    ordersData = ordersResult.value;
-                    console.log('Orders data loaded:', ordersData.length, 'records');
-                } else {
-                    console.error('Failed to load orders:', ordersResult.reason);
-                    showError(`Failed to load orders: ${ordersResult.reason.message || 'Unknown error'}`);
-                }
-                
-                // Handle agents data
-                if (agentsResult.status === 'fulfilled') {
-                    agentsData = agentsResult.value;
-                    console.log('Agents data loaded:', agentsData.length, 'records');
-                } else {
-                    console.error('Failed to load agents:', agentsResult.reason);
-                    showError(`Failed to load agents: ${agentsResult.reason.message || 'Unknown error'}`);
-                }
-                
-                // Handle products data
-                if (productsResult.status === 'fulfilled') {
-                    productsData = productsResult.value;
-                    console.log('Products data loaded:', productsData.length, 'records');
-                } else {
-                    console.error('Failed to load products:', productsResult.reason);
-                    showError(`Failed to load products: ${productsResult.reason.message || 'Unknown error'}`);
-                }
-                
-                updateDashboardStats();
-                initializeOrdersChart();
-                
-                // Display orders data if orders tab is active
-                if (document.getElementById('orders').classList.contains('active')) {
-                    displayOrdersData();
-                }
-                
-                isInitialLoad = false;
-                
-            } catch (error) {
-                console.error('Error loading data:', error);
-                showError(`Failed to load data: ${error.message}`);
-            }
-            
-            // Set up search and filter functionality
-            setupEventListeners();
-        });
+       // Initialize the dashboard
+document.addEventListener('DOMContentLoaded', async function() {
+    try {
+        // Load initial data for dashboard
+        console.log('Loading data from Google Sheets...');
+        
+        // Fetch all data in parallel
+        const [ordersResult, agentsResult, productsResult, suppliersResult] = await Promise.allSettled([
+            fetchOrdersData(),
+            fetchAgentsData(),
+            fetchProductsData(),
+            fetchSuppliersData() // Add this
+        ]);
+        
+        // Handle orders data
+        if (ordersResult.status === 'fulfilled') {
+            ordersData = ordersResult.value;
+            console.log('Orders data loaded:', ordersData.length, 'records');
+        } else {
+            console.error('Failed to load orders:', ordersResult.reason);
+            showError(`Failed to load orders: ${ordersResult.reason.message || 'Unknown error'}`);
+        }
+        
+        // Handle agents data
+        if (agentsResult.status === 'fulfilled') {
+            agentsData = agentsResult.value;
+            console.log('Agents data loaded:', agentsData.length, 'records');
+        } else {
+            console.error('Failed to load agents:', agentsResult.reason);
+            showError(`Failed to load agents: ${agentsResult.reason.message || 'Unknown error'}`);
+        }
+        
+        // Handle products data
+        if (productsResult.status === 'fulfilled') {
+            productsData = productsResult.value;
+            console.log('Products data loaded:', productsData.length, 'records');
+        } else {
+            console.error('Failed to load products:', productsResult.reason);
+            showError(`Failed to load products: ${productsResult.reason.message || 'Unknown error'}`);
+        }
+        
+        // Handle suppliers data
+        if (suppliersResult.status === 'fulfilled') {
+            suppliersData = suppliersResult.value;
+            console.log('Suppliers data loaded:', suppliersData.length, 'records');
+        } else {
+            console.error('Failed to load suppliers:', suppliersResult.reason);
+            showError(`Failed to load suppliers: ${suppliersResult.reason.message || 'Unknown error'}`);
+        }
+        
+        updateDashboardStats();
+        initializeOrdersChart();
+        
+        // Display orders data if orders tab is active
+        if (document.getElementById('orders').classList.contains('active')) {
+            displayOrdersData();
+        }
+        
+        isInitialLoad = false;
+        
+    } catch (error) {
+        console.error('Error loading data:', error);
+        showError(`Failed to load data: ${error.message}`);
+    }
+    
+    // Set up search and filter functionality
+    setupEventListeners();
+});
 
         // Show error message
         function showError(message) {
@@ -1626,6 +1935,194 @@ document.querySelectorAll('.tab').forEach(tab => {
                 throw error;
             }
         }
+
+// Function to fetch suppliers data
+async function fetchSuppliersData() {
+    try {
+        console.log('Fetching suppliers data from:', SUPPLIER_DATABASE_URL);
+        const response = await fetch(SUPPLIER_DATABASE_URL);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log('Suppliers API response:', result);
+        
+        if (result.success && Array.isArray(result.data)) {
+            return result.data;
+        } else {
+            throw new Error(result.message || 'Invalid data format from suppliers API');
+        }
+    } catch (error) {
+        console.error('Error fetching suppliers data:', error);
+        throw error;
+    }
+}
+
+// Display suppliers data in table
+function displaySuppliersData() {
+    const tableBody = document.getElementById('suppliers-table-body');
+    const loadingElement = document.getElementById('suppliers-loading');
+    const tableElement = document.getElementById('suppliers-table');
+    
+    // Clear existing rows
+    tableBody.innerHTML = '';
+    
+    // Show loading, hide table
+    loadingElement.style.display = 'flex';
+    tableElement.style.display = 'none';
+    
+    // Check if we have data
+    if (!suppliersData || suppliersData.length === 0) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="17" style="text-align: center; padding: 2rem;">
+                    <i class="fas fa-exclamation-circle" style="font-size: 2rem; color: #6c757d; margin-bottom: 1rem;"></i>
+                    <p>No supplier data available.</p>
+                </td>
+            </tr>
+        `;
+        
+        // Hide loading, show table
+        loadingElement.style.display = 'none';
+        tableElement.style.display = 'table';
+        return;
+    }
+    
+    // Populate table with suppliers data
+    suppliersData.forEach(supplier => {
+        const row = document.createElement('tr');
+        
+        // Escape special characters
+        const code = escapeHtml(supplier.Code || 'N/A');
+        const name = escapeHtml(supplier.Name || 'N/A');
+        const shot = escapeHtml(supplier.Shot || 'N/A');
+        const style = escapeHtml(supplier.Style || 'N/A');
+        const inch = escapeHtml(supplier.Inch || 'N/A');
+        const duration = escapeHtml(supplier.Duration || 'N/A');
+        const postage = parseFloat(supplier.Postage || 0).toFixed(2);
+        const rmSupplier = parseFloat(supplier['Rm (Supplier)'] || 0).toFixed(2);
+        const rmAgent = parseFloat(supplier['Rm (Agent)'] || 0).toFixed(2);
+        const rmMarket = parseFloat(supplier['Rm (Market)'] || 0).toFixed(2);
+        const profitDirect = parseFloat(supplier['Profit (Direct Supplier)'] || 0).toFixed(2);
+        const profitAgent = parseFloat(supplier['Profit (Agent)'] || 0).toFixed(2);
+        const profitFromAgent = parseFloat(supplier['Profit (From Agent)'] || 0).toFixed(2);
+        const image = escapeHtml(supplier.Image || '');
+        const video = escapeHtml(supplier.Video || '');
+        
+        // Create preview for image and video
+        const imagePreview = image ? 
+            `<a href="${image}" target="_blank" title="${image}"><i class="fas fa-image"></i> View</a>` : 
+            'N/A';
+        const videoPreview = video ? 
+            `<a href="${video}" target="_blank" title="${video}"><i class="fas fa-video"></i> View</a>` : 
+            'N/A';
+        
+        row.innerHTML = `
+            <td><strong>${code}</strong></td>
+            <td>${name}</td>
+            <td>${shot}</td>
+            <td>${style}</td>
+            <td>${inch}"</td>
+            <td>${duration}</td>
+            <td>RM ${postage}</td>
+            <td>RM ${rmSupplier}</td>
+            <td>RM ${rmAgent}</td>
+            <td>RM ${rmMarket}</td>
+            <td>RM ${profitDirect}</td>
+            <td>RM ${profitAgent}</td>
+            <td>RM ${profitFromAgent}</td>
+            <td>${imagePreview}</td>
+            <td>${videoPreview}</td>
+            <td>
+                <button class="action-btn edit" onclick="editSupplier('${code}')">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="action-btn delete" onclick="deleteSupplier('${code}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+        
+        tableBody.appendChild(row);
+    });
+    
+    // Hide loading, show table
+    loadingElement.style.display = 'none';
+    tableElement.style.display = 'table';
+}
+
+// Supplier modal functions
+function closeEditSupplierModal() {
+    document.getElementById('editSupplierModal').style.display = 'none';
+    document.getElementById('editSupplierForm').reset();
+}
+
+function closeDeleteSupplierModal() {
+    document.getElementById('deleteSupplierModal').style.display = 'none';
+}
+
+function toggleAddSupplierForm() {
+    const form = document.getElementById('addSupplierForm');
+    const btn = document.getElementById('add-supplier-btn');
+    
+    if (form.classList.contains('active')) {
+        form.classList.remove('active');
+        btn.innerHTML = '<i class="fas fa-plus"></i> Add Supplier Product';
+    } else {
+        form.classList.add('active');
+        btn.innerHTML = '<i class="fas fa-times"></i> Close Form';
+        form.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+// Edit supplier
+function editSupplier(supplierCode) {
+    const supplier = suppliersData.find(s => s.Code === supplierCode);
+    
+    if (!supplier) {
+        alert('Supplier product not found!');
+        return;
+    }
+    
+    // Fill the edit form with supplier data
+    document.getElementById('edit-supplier-code').value = supplier.Code;
+    document.getElementById('edit-supplier-code-display').value = supplier.Code;
+    document.getElementById('edit-supplier-name').value = supplier.Name || '';
+    document.getElementById('edit-supplier-shot').value = supplier.Shot || '';
+    document.getElementById('edit-supplier-style').value = supplier.Style || 'S';
+    document.getElementById('edit-supplier-inch').value = supplier.Inch || '';
+    document.getElementById('edit-supplier-duration').value = supplier.Duration || '';
+    document.getElementById('edit-supplier-postage').value = supplier.Postage || 0;
+    document.getElementById('edit-supplier-rm_supplier').value = supplier['Rm (Supplier)'] || 0;
+    document.getElementById('edit-supplier-rm_agent').value = supplier['Rm (Agent)'] || 0;
+    document.getElementById('edit-supplier-rm_market').value = supplier['Rm (Market)'] || 0;
+    document.getElementById('edit-supplier-profit_direct_supplier').value = supplier['Profit (Direct Supplier)'] || 0;
+    document.getElementById('edit-supplier-profit_agent').value = supplier['Profit (Agent)'] || 0;
+    document.getElementById('edit-supplier-profit_from_agent').value = supplier['Profit (From Agent)'] || 0;
+    document.getElementById('edit-supplier-image').value = supplier.Image || '';
+    document.getElementById('edit-supplier-video').value = supplier.Video || '';
+    
+    // Show the modal
+    document.getElementById('editSupplierModal').style.display = 'block';
+}
+
+// Delete supplier
+function deleteSupplier(supplierCode) {
+    const supplier = suppliersData.find(s => s.Code === supplierCode);
+    
+    if (!supplier) {
+        alert('Supplier product not found!');
+        return;
+    }
+    
+    document.getElementById('delete-supplier-code').value = supplierCode;
+    document.getElementById('delete-supplier-confirm-text').textContent = 
+        `Are you sure you want to delete supplier product "${supplier.Name}" (Code: ${supplierCode})?`;
+    
+    document.getElementById('deleteSupplierModal').style.display = 'block';
+}
 
         // Function to fetch agents data - FIXED for email space issue
         async function fetchAgentsData() {
@@ -2072,6 +2569,28 @@ document.querySelectorAll('.tab').forEach(tab => {
             productSearch.addEventListener('input', function() {
                 filterProductsTable();
             });
+
+// Supplier search
+const supplierSearch = document.getElementById('supplier-search');
+supplierSearch.addEventListener('input', function() {
+    filterSuppliersTable();
+});
+
+// Add supplier button
+document.getElementById('add-supplier-btn').addEventListener('click', toggleAddSupplierForm);
+
+// Cancel add supplier button
+document.getElementById('cancel-add-supplier').addEventListener('click', function() {
+    document.getElementById('addSupplierForm').classList.remove('active');
+    document.getElementById('add-supplier-btn').innerHTML = '<i class="fas fa-plus"></i> Add Supplier Product';
+    document.getElementById('addSupplierFormFields').reset();
+});
+
+// Handle add supplier form submission
+document.getElementById('addSupplierFormFields').addEventListener('submit', handleAddSupplierSubmit);
+
+// Handle edit supplier form submission
+document.getElementById('editSupplierForm').addEventListener('submit', handleEditSupplierSubmit);
             
             // Add agent button
             document.getElementById('add-agent-btn').addEventListener('click', function() {
@@ -2122,6 +2641,202 @@ function filterSalesTable() {
             row.style.display = 'none';
         }
     });
+}
+
+// Filter suppliers table
+function filterSuppliersTable() {
+    const searchTerm = document.getElementById('supplier-search').value.toLowerCase();
+    const rows = document.querySelectorAll('#suppliers-table-body tr');
+    
+    rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length === 0) return;
+        
+        const code = cells[0].textContent.toLowerCase();
+        const name = cells[1].textContent.toLowerCase();
+        const style = cells[3].textContent.toLowerCase();
+        
+        const matchesSearch = !searchTerm || 
+            code.includes(searchTerm) || 
+            name.includes(searchTerm) || 
+            style.includes(searchTerm);
+        
+        if (matchesSearch) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+// Handle add supplier form submission
+async function handleAddSupplierSubmit(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const supplierData = {
+        action: 'add',
+        supplier_code: formData.get('supplier_code'),
+        supplier_name: formData.get('supplier_name'),
+        supplier_shot: formData.get('supplier_shot'),
+        supplier_style: formData.get('supplier_style'),
+        supplier_inch: formData.get('supplier_inch'),
+        supplier_duration: formData.get('supplier_duration'),
+        supplier_postage: formData.get('supplier_postage'),
+        supplier_rm_supplier: formData.get('supplier_rm_supplier'),
+        supplier_rm_agent: formData.get('supplier_rm_agent'),
+        supplier_rm_market: formData.get('supplier_rm_market'),
+        supplier_profit_direct_supplier: formData.get('supplier_profit_direct_supplier'),
+        supplier_profit_agent: formData.get('supplier_profit_agent'),
+        supplier_profit_from_agent: formData.get('supplier_profit_from_agent'),
+        supplier_image: formData.get('supplier_image'),
+        supplier_video: formData.get('supplier_video')
+    };
+    
+    // Validate required fields
+    if (!supplierData.supplier_code || !supplierData.supplier_name) {
+        alert('Please fill in all required fields (Code, Name)');
+        return;
+    }
+    
+    try {
+        const response = await fetch(SUPPLIER_DATABASE_URL, {
+            method: 'POST',
+            body: JSON.stringify(supplierData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Supplier product added successfully!');
+            
+            e.target.reset();
+            document.getElementById('addSupplierForm').classList.remove('active');
+            document.getElementById('add-supplier-btn').innerHTML = '<i class="fas fa-plus"></i> Add Supplier Product';
+            
+            // Refresh suppliers data
+            suppliersData = await fetchSuppliersData();
+            displaySuppliersData();
+        } else {
+            alert('Error adding supplier product: ' + (result.message || 'Unknown error'));
+        }
+    } catch (error) {
+        alert('Error adding supplier product: ' + error.message);
+    }
+}
+
+// Handle edit supplier form submission
+async function handleEditSupplierSubmit(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const supplierData = {
+        action: 'update',
+        supplier_code: formData.get('supplier_code'),
+        supplier_name: formData.get('supplier_name'),
+        supplier_shot: formData.get('supplier_shot'),
+        supplier_style: formData.get('supplier_style'),
+        supplier_inch: formData.get('supplier_inch'),
+        supplier_duration: formData.get('supplier_duration'),
+        supplier_postage: formData.get('supplier_postage'),
+        supplier_rm_supplier: formData.get('supplier_rm_supplier'),
+        supplier_rm_agent: formData.get('supplier_rm_agent'),
+        supplier_rm_market: formData.get('supplier_rm_market'),
+        supplier_profit_direct_supplier: formData.get('supplier_profit_direct_supplier'),
+        supplier_profit_agent: formData.get('supplier_profit_agent'),
+        supplier_profit_from_agent: formData.get('supplier_profit_from_agent'),
+        supplier_image: formData.get('supplier_image'),
+        supplier_video: formData.get('supplier_video')
+    };
+    
+    try {
+        const response = await fetch(SUPPLIER_DATABASE_URL, {
+            method: 'POST',
+            body: JSON.stringify(supplierData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Supplier product updated successfully!');
+            closeEditSupplierModal();
+            
+            // Refresh the suppliers data
+            suppliersData = await fetchSuppliersData();
+            displaySuppliersData();
+        } else {
+            alert('Error updating supplier product: ' + (result.message || 'Unknown error'));
+        }
+    } catch (error) {
+        alert('Error updating supplier product: ' + error.message);
+    }
+}
+
+// Confirm delete supplier
+async function confirmDeleteSupplier() {
+    const supplierCode = document.getElementById('delete-supplier-code').value;
+    
+    try {
+        const response = await fetch(SUPPLIER_DATABASE_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'delete',
+                supplier_code: supplierCode
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Supplier product deleted successfully!');
+            closeDeleteSupplierModal();
+            
+            // Refresh the suppliers data
+            suppliersData = await fetchSuppliersData();
+            displaySuppliersData();
+        } else {
+            alert('Error deleting supplier product: ' + (result.message || 'Unknown error'));
+        }
+    } catch (error) {
+        alert('Error deleting supplier product: ' + error.message);
+    }
+}
+
+// Add event listeners for URL preview updates in supplier add form
+document.getElementById('add-supplier-image').addEventListener('input', function() {
+    updateSupplierAddUrlPreview('image', this.value);
+});
+
+document.getElementById('add-supplier-video').addEventListener('input', function() {
+    updateSupplierAddUrlPreview('video', this.value);
+});
+
+// Add event listeners for URL preview updates in supplier edit form
+document.getElementById('edit-supplier-image').addEventListener('input', function() {
+    updateSupplierEditUrlPreview('image', this.value);
+});
+
+document.getElementById('edit-supplier-video').addEventListener('input', function() {
+    updateSupplierEditUrlPreview('video', this.value);
+});
+
+// URL preview functions for supplier forms
+function updateSupplierAddUrlPreview(type, url) {
+    const previewElement = document.getElementById(`add-supplier-${type}-preview`);
+    if (url) {
+        previewElement.innerHTML = `<a href="${url}" target="_blank" title="${url}">${url.substring(0, 50)}${url.length > 50 ? '...' : ''}</a>`;
+    } else {
+        previewElement.innerHTML = '';
+    }
+}
+
+function updateSupplierEditUrlPreview(type, url) {
+    const previewElement = document.getElementById(`edit-supplier-${type}-preview`);
+    if (url) {
+        previewElement.innerHTML = `<a href="${url}" target="_blank" title="${url}">${url.substring(0, 50)}${url.length > 50 ? '...' : ''}</a>`;
+    } else {
+        previewElement.innerHTML = '';
+    }
 }
 
         // Filter orders table based on search and filters
