@@ -1250,6 +1250,7 @@
                     <th>Total Spin Prize (RM)</th>
                     <th>Total Price (RM)</th>
                     <th>Total Commission (RM)</th>
+                    <th>Total Supplier (RM)</th>
                     <th>Total Profit (RM)</th>
                 </tr>
             </thead>
@@ -1258,7 +1259,7 @@
             </tbody>
         </table>
     </div>
-</div>             
+</div>    
 
         <!-- Edit Product Modal -->
         <div id="editProductModal" class="modal">
@@ -3531,20 +3532,46 @@ async function confirmDeleteAgent() {
     }
 }
 
-// Function to get commission rate for a product
+// Helper function to get commission rate for a product
 function getCommissionRate(productCode, inch) {
     // Check custom rates first
     if (COMMISSION_RATES.customRates[productCode]) {
         return COMMISSION_RATES.customRates[productCode];
     }
     
-    // Check common rates by inch
-    if (inch && COMMISSION_RATES.commonRates[inch]) {
-        return COMMISSION_RATES.commonRates[inch];
+    // Check common rates by inch (convert inch to string without decimal for matching)
+    if (inch) {
+        const inchStr = parseFloat(inch).toString();
+        if (COMMISSION_RATES.commonRates[inchStr]) {
+            return COMMISSION_RATES.commonRates[inchStr];
+        }
     }
     
     // Default rate if no match
     return 0;
+}
+
+// Function to get supplier cost for a product
+function getSupplierCost(productCode, suppliersData) {
+    if (!suppliersData) return 0;
+    
+    // Find supplier by product code
+    const supplier = suppliersData.find(s => s.Code === productCode);
+    
+    // Return Rm (Supplier) or 0 if not found
+    if (supplier && supplier['Rm (Supplier)']) {
+        return parseFloat(supplier['Rm (Supplier)']) || 0;
+    }
+    
+    return 0;
+}
+
+// Function to get inch size for a product from suppliers data
+function getProductInch(productCode, suppliersData) {
+    if (!suppliersData) return null;
+    
+    const supplier = suppliersData.find(s => s.Code === productCode);
+    return supplier ? supplier.Inch : null;
 }
 
 // Function to fetch product details by code
@@ -3575,6 +3602,11 @@ async function calculateAgentSales() {
         salesTable.style.display = 'none';
         salesTableBody.innerHTML = '';
         
+        // Make sure suppliers data is loaded
+        if (!suppliersData || suppliersData.length === 0) {
+            suppliersData = await fetchSuppliersData();
+        }
+        
         // Group orders by UserId
         const agentSales = {};
         
@@ -3592,6 +3624,7 @@ async function calculateAgentSales() {
                     totalSpinPrize: 0,
                     totalPrice: 0,
                     totalCommission: 0,
+                    totalSupplier: 0,
                     totalProfit: 0
                 };
             }
@@ -3621,26 +3654,29 @@ async function calculateAgentSales() {
             const price = parseFloat(order.Total) || 0;
             agent.totalPrice += price;
             
-            // Calculate commission
+            // Get product code
             const productCode = order['Product Code'] || '';
-            const product = await getProductByCode(productCode);
-            const inch = product ? product.Inch : null;
+            
+            // Get inch size from suppliers data for commission calculation
+            const inch = getProductInch(productCode, suppliersData);
+            
+            // Calculate commission
             const commissionRate = getCommissionRate(productCode, inch);
             const commission = commissionRate * qty;
-            
             agent.totalCommission += commission;
+            
+            // Calculate supplier cost
+            const supplierCost = getSupplierCost(productCode, suppliersData);
+            agent.totalSupplier += (supplierCost * qty);
         }
         
         // Calculate profit for each agent
-Object.values(agentSales).forEach(agent => {
-    // Total Profit = Total Price - Total Orders (RM1 per order) - Total Commission - Total Postage
-    agent.totalProfit = agent.totalPrice - agent.totalOrders - agent.totalCommission - agent.totalPostage;
-});
+        Object.values(agentSales).forEach(agent => {
+            // Total Profit = Total Price - Total Orders (RM1 per order) - Total Commission - Total Postage - Total Supplier
+            agent.totalProfit = agent.totalPrice - agent.totalOrders - agent.totalCommission - agent.totalPostage - agent.totalSupplier;
+        });
         
         // Display the data
-        displayAgentSales(agentSales);
-
- // Display the data
         displayAgentSales(agentSales);
         
         // Return the data for export
@@ -3649,12 +3685,12 @@ Object.values(agentSales).forEach(agent => {
     } catch (error) {
         console.error('Error calculating agent sales:', error);
         showError(`Failed to calculate sales: ${error.message}`);
-
-return {};
         
         // Hide loading, show empty table
         document.getElementById('sales-loading').style.display = 'none';
         document.getElementById('sales-table').style.display = 'table';
+        
+        return {};
     }
 }
 
@@ -3684,11 +3720,12 @@ function displayAgentSales(agentSales) {
             <td>RM ${agent.totalSpinPrize.toFixed(2)}</td>
             <td>RM ${agent.totalPrice.toFixed(2)}</td>
             <td>RM ${agent.totalCommission.toFixed(2)}</td>
+            <td>RM ${agent.totalSupplier.toFixed(2)}</td>
             <td><strong>RM ${agent.totalProfit.toFixed(2)}</strong></td>
         `;
         
         // Highlight profit column
-        const profitCell = row.cells[8];
+        const profitCell = row.cells[9];
         if (agent.totalProfit > 0) {
             profitCell.style.color = '#28a745';
             profitCell.style.fontWeight = 'bold';
@@ -3711,11 +3748,11 @@ function exportSalesToCSV(agentSales) {
     agentsArray.sort((a, b) => a.userId.localeCompare(b.userId));
     
     // CSV header
-    let csv = 'User ID,Total Orders,Total Qty Product,Total Postage (RM),Total Discount Code (RM),Total Spin Prize (RM),Total Price (RM),Total Commission (RM),Total Profit (RM)\n';
+    let csv = 'User ID,Total Orders,Total Qty Product,Total Postage (RM),Total Discount Code (RM),Total Spin Prize (RM),Total Price (RM),Total Commission (RM),Total Supplier (RM),Total Profit (RM)\n';
     
     // CSV data
     agentsArray.forEach(agent => {
-        csv += `"${agent.userId}",${agent.totalOrders},${agent.totalQty},${agent.totalPostage.toFixed(2)},${agent.totalDiscount.toFixed(2)},${agent.totalSpinPrize.toFixed(2)},${agent.totalPrice.toFixed(2)},${agent.totalCommission.toFixed(2)},${agent.totalProfit.toFixed(2)}\n`;
+        csv += `"${agent.userId}",${agent.totalOrders},${agent.totalQty},${agent.totalPostage.toFixed(2)},${agent.totalDiscount.toFixed(2)},${agent.totalSpinPrize.toFixed(2)},${agent.totalPrice.toFixed(2)},${agent.totalCommission.toFixed(2)},${agent.totalSupplier.toFixed(2)},${agent.totalProfit.toFixed(2)}\n`;
     });
     
     // Create download link
