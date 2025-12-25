@@ -1764,34 +1764,6 @@
         let suppliersData = [];
         let ordersChart = null;
         let isInitialLoad = true; // Track if this is the initial load
-        
-
-// Commission rate configuration
-const COMMISSION_RATES = {
-    // Custom rates by product code
-    customRates: {
-        'B4': 10,
-        'SV115': 30,
-        'SV113': 30,
-        'SV106': 30,
-        'SV107': 30
-    },
-    // Common rates by inch size
-    commonRates: {
-        '4': 30,
-        '5': 30,
-        '6': 30,
-        '7': 40,
-        '8': 40,
-        '9': 40,
-        '10': 50,
-        '11': 60,
-        '12': 60,
-        '18': 70,
-        '22': 70,
-        '24': 70
-    }
-};
 
         // Helper function to escape HTML special characters
         function escapeHtml(text) {
@@ -2383,11 +2355,8 @@ async function displayOrdersData() {
                 const userId = escapeHtml(order.UserId || 'N/A');
                 const remark = escapeHtml(order.Remark || 'N/A');
 
-// Get inch size from suppliers data for commission calculation
-const inch = getProductInch(productCode, suppliersData);
-
 // Calculate commission
-const commissionRate = getCommissionRate(productCode, inch);
+const commissionRate = getCommissionRate(productCode, suppliersData);
 const commission = commissionRate * productQuantity;
 
 // Calculate supplier cost
@@ -3607,22 +3576,18 @@ async function confirmDeleteAgent() {
     }
 }
 
-// Helper function to get commission rate for a product
-function getCommissionRate(productCode, inch) {
-    // Check custom rates first
-    if (COMMISSION_RATES.customRates[productCode]) {
-        return COMMISSION_RATES.customRates[productCode];
+// Helper function to get commission rate for a product from supplier database
+function getCommissionRate(productCode, suppliersData) {
+    if (!suppliersData || !productCode) return 0;
+    
+    // Find supplier by product code
+    const supplier = suppliersData.find(s => s.Code === productCode);
+    
+    // Return Profit (Agent) or 0 if not found
+    if (supplier && supplier['Profit (Agent)']) {
+        return parseFloat(supplier['Profit (Agent)']) || 0;
     }
     
-    // Check common rates by inch (convert inch to string without decimal for matching)
-    if (inch) {
-        const inchStr = parseFloat(inch).toString();
-        if (COMMISSION_RATES.commonRates[inchStr]) {
-            return COMMISSION_RATES.commonRates[inchStr];
-        }
-    }
-    
-    // Default rate if no match
     return 0;
 }
 
@@ -3732,11 +3697,8 @@ async function calculateAgentSales() {
             // Get product code
             const productCode = order['Product Code'] || '';
             
-            // Get inch size from suppliers data for commission calculation
-            const inch = getProductInch(productCode, suppliersData);
-            
             // Calculate commission
-            const commissionRate = getCommissionRate(productCode, inch);
+            const commissionRate = getCommissionRate(productCode, suppliersData);
             const commission = commissionRate * qty;
             agent.totalCommission += commission;
             
