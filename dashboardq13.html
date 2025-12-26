@@ -709,6 +709,41 @@
 .add-product-form.active {
     display: block;
 }
+/* Add this to your existing CSS */
+.logout-btn {
+    padding: 0.5rem 1rem;
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: var(--transition);
+    margin-top: 5px;
+}
+
+.logout-btn:hover {
+    background: #dc2626;
+    transform: translateY(-2px);
+}
+/* Add this to your CSS after .logout-btn styles */
+.welcome-mobile {
+    display: none;
+    font-weight: bold;
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .welcome-mobile {
+        display: block;
+        order: 3;
+        margin-left: auto;
+        margin-right: 1rem;
+    }
+    .user-info {
+        order: 2;
+    }
+}
     </style>
 </head>
 <body>
@@ -724,10 +759,12 @@
         <img src="Q13LOGO.png" alt="Logo">
     </div>
     <div>
-        <h3>Administrator</h3>
-        <p>Q13DYNAMIC & VENTURERUSH</p>
+        <h3 id="welcomeText">Welcome!</h3>
+        <button class="logout-btn" onclick="logout()">Logout</button>
     </div>
 </div>
+<!-- Add this inside header-content if you need mobile view -->
+<div class="welcome-mobile" id="mobileWelcome" style="display: none;"></div>
             </div>
         </div>
     </header>
@@ -1750,6 +1787,46 @@
     </div>
 
     <script>
+// ==================== LOGIN VERIFICATION ====================
+// Check if user is logged in
+const username = localStorage.getItem("username") || "";
+const userType = localStorage.getItem("userType") || "";
+
+// Redirect to login if not logged in or not admin
+if (!username) {
+    window.location.href = "index.html";
+}
+
+// Check if user is admin (based on your login logic)
+if (userType.toLowerCase() !== "admin") {
+    window.location.href = "index.html"; // or redirect to staff dashboard if needed
+}
+
+// Set welcome text
+document.addEventListener('DOMContentLoaded', function() {
+    const welcomeElement = document.getElementById('welcomeText');
+    if (welcomeElement && username) {
+        welcomeElement.textContent = `Welcome ${username}!`;
+    }
+// In the DOMContentLoaded event, add:
+const mobileWelcome = document.getElementById('mobileWelcome');
+if (mobileWelcome && username) {
+    mobileWelcome.textContent = `Welcome ${username}!`;
+}
+});
+
+// Logout function
+function logout() {
+    // Clear all stored login data
+    localStorage.removeItem("username");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("userType");
+    
+    // Redirect to login page
+    window.location.href = "index.html";
+}
+// ==================== END LOGIN VERIFICATION ====================
+
         // URLs for Google Apps Script Web Apps
         const ORDER_DATABASE_URL = 'https://script.google.com/macros/s/AKfycbxhuHO7-6fGOIS-BF9kUYHIBNzPVspo3MTyRIZvZnRY0WzuYOavP_gPoG_OJyuTShPq/exec';
         const AGENT_DATABASE_URL = 'https://script.google.com/macros/s/AKfycbwL86AaXKMwV7FBIQMcXCTt9qlCHDvi2Ftqzr-u5ePJGdgzMqqVWFQwdbXMRET8cldY/exec';
