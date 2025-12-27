@@ -834,8 +834,8 @@
                         <div>
                             <div class="stat-value" id="total-orders">0</div>
                             <div class="stat-label">Total Orders</div>
-                            <div class="stat-change positive">
-                                <i class="fas fa-arrow-up"></i> 12% from last month
+                            <div class="stat-change positive" id="total-orders-change">
+                                <i class="fas fa-arrow-up"></i> 0% from last month
                             </div>
                         </div>
                         <div class="stat-icon total-orders">
@@ -849,8 +849,8 @@
                         <div>
                             <div class="stat-value" id="total-agents">0</div>
                             <div class="stat-label">Total Agents</div>
-                            <div class="stat-change positive">
-                                <i class="fas fa-arrow-up"></i> 5% from last month
+                            <div class="stat-change positive" id="total-agents-change">
+                                <i class="fas fa-arrow-up"></i> 0% from last month
                             </div>
                         </div>
                         <div class="stat-icon total-agents">
@@ -864,9 +864,6 @@
                         <div>
                             <div class="stat-value" id="total-products">0</div>
                             <div class="stat-label">Total Products</div>
-                            <div class="stat-change positive">
-                                <i class="fas fa-arrow-up"></i> 8% from last month
-                            </div>
                         </div>
                         <div class="stat-icon total-products">
                             <i class="fas fa-box"></i>
@@ -879,8 +876,8 @@
                         <div>
                             <div class="stat-value" id="total-revenue">RM 0</div>
                             <div class="stat-label">Total Revenue</div>
-                            <div class="stat-change positive">
-                                <i class="fas fa-arrow-up"></i> 15% from last month
+                            <div class="stat-change positive" id="total-revenue-change">
+                                <i class="fas fa-arrow-up"></i> 0% from last month
                             </div>
                         </div>
                         <div class="stat-icon total-revenue">
@@ -890,17 +887,30 @@
                 </div>
             </div>
 
-            <div class="chart-container">
-                <div class="chart-header">
-                    <h3 class="chart-title">Orders Overview</h3>
-                    <select class="filter-select" id="chart-period">
-                        <option value="week">Last 7 Days</option>
-                        <option value="month">Last 30 Days</option>
-                        <option value="quarter">Last 3 Months</option>
-                    </select>
-                </div>
-                <canvas id="ordersChart"></canvas>
-            </div>
+<!-- Add this right after the stats-grid div in the dashboard tab -->
+<div class="charts-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+    <div class="chart-container">
+        <div class="chart-header">
+            <h3 class="chart-title">Orders Overview</h3>
+        </div>
+        <canvas id="ordersChart"></canvas>
+    </div>
+    
+    <div class="chart-container">
+        <div class="chart-header">
+            <h3 class="chart-title">Agents Overview</h3>
+        </div>
+        <canvas id="agentsChart"></canvas>
+    </div>
+    
+    <div class="chart-container">
+        <div class="chart-header">
+            <h3 class="chart-title">Revenue Overview</h3>
+        </div>
+        <canvas id="revenueChart"></canvas>
+    </div>
+</div>
+
         </div>
 
         <!-- Customer Orders Tab -->
@@ -1984,7 +1994,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
         
         updateDashboardStats();
-        initializeOrdersChart();
+        initializeCharts(); // Changed from initializeOrdersChart()
         
         // Display orders data if orders tab is active
         if (document.getElementById('orders').classList.contains('active')) {
@@ -2317,67 +2327,168 @@ function deleteSupplier(supplierCode) {
             }
         }
 
-        // Update dashboard statistics
-        function updateDashboardStats() {
-            // Total Orders
-            document.getElementById('total-orders').textContent = ordersData.length;
-            
-            // Total Agents
-            document.getElementById('total-agents').textContent = agentsData.length;
-            
-            // Total Products
-            document.getElementById('total-products').textContent = productsData.length;
-            
-            // Total Revenue (sum of all orders with "Total" column)
-            let totalRevenue = 0;
-            ordersData.forEach(order => {
-                const total = parseFloat(order.Total) || 0;
-                totalRevenue += total;
-            });
-            document.getElementById('total-revenue').textContent = `RM ${totalRevenue.toFixed(2)}`;
-        }
+function updateDashboardStats() {
+    // Total Orders
+    const totalOrders = ordersData.length;
+    document.getElementById('total-orders').textContent = totalOrders;
+    
+    // Total Agents
+    const totalAgents = agentsData.length;
+    document.getElementById('total-agents').textContent = totalAgents;
+    
+    // Total Products
+    document.getElementById('total-products').textContent = productsData.length;
+    
+    // Total Revenue
+    let totalRevenue = 0;
+    ordersData.forEach(order => {
+        const total = parseFloat(order.Total) || 0;
+        totalRevenue += total;
+    });
+    document.getElementById('total-revenue').textContent = `RM ${totalRevenue.toFixed(2)}`;
+    
+    // Calculate month-to-month changes
+    const changes = calculateMonthToMonthChange();
+    const agentsChange = getAgentsMonthToMonthChange();
+    
+    // Update percentage displays
+    updatePercentageDisplay('total-orders-change', changes.ordersChange);
+    updatePercentageDisplay('total-agents-change', agentsChange);
+    updatePercentageDisplay('total-revenue-change', changes.revenueChange);
+}
 
-        // Initialize orders chart
-        function initializeOrdersChart() {
-            const ctx = document.getElementById('ordersChart').getContext('2d');
-            
-            // Sample data for the chart
-            const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'];
-            const data = [65, 59, 80, 81, 56, 55, 40];
-            
-            ordersChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Orders',
-                        data: data,
-                        backgroundColor: 'rgba(67, 97, 238, 0.1)',
-                        borderColor: 'rgba(67, 97, 238, 1)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top',
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                stepSize: 20
-                            }
-                        }
-                    }
+function updatePercentageDisplay(elementId, percentage) {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+    
+    const isPositive = percentage >= 0;
+    const icon = isPositive ? 'fa-arrow-up' : 'fa-arrow-down';
+    const colorClass = isPositive ? 'positive' : 'negative';
+    
+    element.innerHTML = `
+        <i class="fas ${icon}"></i> ${Math.abs(percentage).toFixed(1)}% from last month
+    `;
+    element.className = `stat-change ${colorClass}`;
+}
+
+// Initialize all charts
+function initializeCharts() {
+    // Get data by month
+    const ordersByMonth = getOrdersByMonth();
+    const agentsByMonth = getAgentsByMonth();
+    const revenueByMonth = getRevenueByMonth();
+    
+    // Get last 12 months
+    const months = getLast12Months();
+    
+    // Prepare data for charts
+    const ordersDataPoints = months.map(month => ordersByMonth[month] || 0);
+    const agentsDataPoints = months.map(month => agentsByMonth[month] || 0);
+    const revenueDataPoints = months.map(month => revenueByMonth[month] || 0);
+    
+    // Format month labels (e.g., "Jan 2024")
+    const monthLabels = months.map(month => {
+        const [year, monthNum] = month.split('-');
+        const date = new Date(year, monthNum - 1);
+        return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+    });
+    
+    // Chart configuration
+    const chartConfig = {
+        responsive: true,
+        plugins: {
+            legend: {
+                display: true,
+                position: 'top',
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: {
+                    color: 'rgba(0, 0, 0, 0.05)'
                 }
-            });
+            },
+            x: {
+                grid: {
+                    color: 'rgba(0, 0, 0, 0.05)'
+                }
+            }
         }
+    };
+    
+    // Orders Chart
+    const ordersCtx = document.getElementById('ordersChart').getContext('2d');
+    new Chart(ordersCtx, {
+        type: 'line',
+        data: {
+            labels: monthLabels,
+            datasets: [{
+                label: 'Orders',
+                data: ordersDataPoints,
+                backgroundColor: 'rgba(67, 97, 238, 0.1)',
+                borderColor: 'rgba(67, 97, 238, 1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: chartConfig
+    });
+    
+    // Agents Chart
+    const agentsCtx = document.getElementById('agentsChart').getContext('2d');
+    new Chart(agentsCtx, {
+        type: 'line',
+        data: {
+            labels: monthLabels,
+            datasets: [{
+                label: 'New Agents',
+                data: agentsDataPoints,
+                backgroundColor: 'rgba(155, 89, 182, 0.1)',
+                borderColor: 'rgba(155, 89, 182, 1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: chartConfig
+    });
+    
+    // Revenue Chart
+    const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+    new Chart(revenueCtx, {
+        type: 'line',
+        data: {
+            labels: monthLabels,
+            datasets: [{
+                label: 'Revenue (RM)',
+                data: revenueDataPoints,
+                backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                borderColor: 'rgba(231, 76, 60, 1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: chartConfig
+    });
+}
+
+// Helper function to get last 12 months
+function getLast12Months() {
+    const months = [];
+    const now = new Date();
+    
+    for (let i = 11; i >= 0; i--) {
+        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const year = date.getFullYear();
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        months.push(`${year}-${month}`);
+    }
+    
+    return months;
+}       
 
         function formatDate(dateString) {
     if (!dateString) return 'N/A';
@@ -2755,12 +2866,7 @@ document.getElementById('editSupplierForm').addEventListener('submit', handleEdi
             document.getElementById('add-agent-btn').addEventListener('click', function() {
     document.getElementById('addAgentModal').style.display = 'block';
 });
-            
-            // Chart period selector
-            document.getElementById('chart-period').addEventListener('change', function() {
-                alert('Chart would update based on selected period.');
-                // In a real implementation, this would update the chart data
-            });
+           
 
  // Sales search
     const salesSearch = document.getElementById('sales-search');
@@ -4080,6 +4186,129 @@ async function exportSalesToCSV() {
         console.error('Error exporting CSV:', error);
         alert('Error exporting CSV: ' + error.message);
     }
+}
+
+function getAgentsMonthToMonthChange() {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    
+    // Last month
+    const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+    const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+    
+    // Filter agents for current month
+    const currentMonthAgents = agentsData.filter(agent => {
+        const agentDate = new Date(agent.Timestamp);
+        return agentDate.getMonth() === currentMonth && 
+               agentDate.getFullYear() === currentYear;
+    });
+    
+    // Filter agents for last month
+    const lastMonthAgents = agentsData.filter(agent => {
+        const agentDate = new Date(agent.Timestamp);
+        return agentDate.getMonth() === lastMonth && 
+               agentDate.getFullYear() === lastMonthYear;
+    });
+    
+    // Calculate change
+    return calculatePercentageChange(lastMonthAgents.length, currentMonthAgents.length);
+}
+
+// Add these functions after your existing helper functions
+function calculateMonthToMonthChange() {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    
+    // Last month
+    const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+    const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+    
+    // Filter orders for current month
+    const currentMonthOrders = ordersData.filter(order => {
+        const orderDate = new Date(order.Timestamp);
+        return orderDate.getMonth() === currentMonth && 
+               orderDate.getFullYear() === currentYear;
+    });
+    
+    // Filter orders for last month
+    const lastMonthOrders = ordersData.filter(order => {
+        const orderDate = new Date(order.Timestamp);
+        return orderDate.getMonth() === lastMonth && 
+               orderDate.getFullYear() === lastMonthYear;
+    });
+    
+    // Calculate changes
+    const ordersChange = calculatePercentageChange(
+        lastMonthOrders.length, 
+        currentMonthOrders.length
+    );
+    
+    const revenueChange = calculatePercentageChange(
+        calculateTotalRevenue(lastMonthOrders),
+        calculateTotalRevenue(currentMonthOrders)
+    );
+    
+    return { ordersChange, revenueChange };
+}
+
+function calculatePercentageChange(previous, current) {
+    if (previous === 0) return current > 0 ? 100 : 0;
+    return ((current - previous) / previous) * 100;
+}
+
+function calculateTotalRevenue(orders) {
+    return orders.reduce((sum, order) => sum + (parseFloat(order.Total) || 0), 0);
+}
+
+function getAgentsByMonth() {
+    const agentsByMonth = {};
+    
+    agentsData.forEach(agent => {
+        const date = new Date(agent.Timestamp);
+        const monthYear = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+        
+        if (!agentsByMonth[monthYear]) {
+            agentsByMonth[monthYear] = 0;
+        }
+        agentsByMonth[monthYear]++;
+    });
+    
+    return agentsByMonth;
+}
+
+function getOrdersByMonth() {
+    const ordersByMonth = {};
+    
+    ordersData.forEach(order => {
+        const date = new Date(order.Timestamp);
+        const monthYear = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+        
+        if (!ordersByMonth[monthYear]) {
+            ordersByMonth[monthYear] = 0;
+        }
+        ordersByMonth[monthYear]++;
+    });
+    
+    return ordersByMonth;
+}
+
+function getRevenueByMonth() {
+    const revenueByMonth = {};
+    
+    ordersData.forEach(order => {
+        const date = new Date(order.Timestamp);
+        const monthYear = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+        const total = parseFloat(order.Total) || 0;
+        
+        if (!revenueByMonth[monthYear]) {
+            revenueByMonth[monthYear] = 0;
+        }
+        revenueByMonth[monthYear] += total;
+    });
+    
+    return revenueByMonth;
 }
 
     </script>
