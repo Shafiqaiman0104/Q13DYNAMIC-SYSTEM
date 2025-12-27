@@ -744,6 +744,34 @@
         order: 2;
     }
 }
+/* Date filter responsive */
+@media (max-width: 992px) {
+    .date-filter-container {
+        flex-wrap: wrap;
+        gap: 0.5rem !important;
+    }
+    
+    .date-filter-container > div {
+        flex: 1;
+        min-width: 140px;
+    }
+}
+
+@media (max-width: 768px) {
+    .date-filter-container {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 0.5rem !important;
+    }
+    
+    .date-filter-container > div {
+        width: 100%;
+    }
+    
+    #clear-date-filter {
+        width: 100%;
+    }
+}
     </style>
 </head>
 <body>
@@ -878,27 +906,40 @@
         <!-- Customer Orders Tab -->
         <div id="orders" class="tab-content">
             <div class="filters">
-                <div class="search-box">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="order-search" placeholder="Search orders by name, phone, email, or bill code...">
-                </div>
-                <div>
-                    <select class="filter-select" id="order-status-filter">
-                        <option value="all">All Statuses</option>
-                        <option value="paid">Paid</option>
-                        <option value="pending">Pending</option>
-                    </select>
-                    <select class="filter-select" id="order-delivery-filter">
-                        <option value="all">All Delivery Status</option>
-                        <option value="delivered">Delivered</option>
-                        <option value="pending">Pending</option>
-                        <option value="notice">Notice</option>
-                        <option value="packing">Packing</option>
-                        <option value="on delivery">On Delivery</option>
-                        <option value="complete">Complete</option>
-                    </select>
-                </div>
-            </div>
+    <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input type="text" id="order-search" placeholder="Search orders by name, phone, email, or bill code...">
+    </div>
+    <div class="date-filter-container" style="display: flex; gap: 10px; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 5px;">
+            <label style="font-weight: 600; color: var(--dark-color);">From:</label>
+            <input type="date" id="date-from" class="filter-select" style="padding: 0.6rem;">
+        </div>
+        <div style="display: flex; align-items: center; gap: 5px;">
+            <label style="font-weight: 600; color: var(--dark-color);">To:</label>
+            <input type="date" id="date-to" class="filter-select" style="padding: 0.6rem;">
+        </div>
+        <button id="clear-date-filter" class="action-btn" style="padding: 0.6rem 1rem; background-color: #6c757d;">
+            <i class="fas fa-times"></i> Clear
+        </button>
+    </div>
+    <div>
+        <select class="filter-select" id="order-status-filter">
+            <option value="all">All Statuses</option>
+            <option value="paid">Paid</option>
+            <option value="pending">Pending</option>
+        </select>
+        <select class="filter-select" id="order-delivery-filter">
+            <option value="all">All Delivery Status</option>
+            <option value="delivered">Delivered</option>
+            <option value="pending">Pending</option>
+            <option value="notice">Notice</option>
+            <option value="packing">Packing</option>
+            <option value="on delivery">On Delivery</option>
+            <option value="complete">Complete</option>
+        </select>
+    </div>
+</div>
 
             <div class="data-table-container">
                 <div class="loading" id="orders-loading">
@@ -2325,23 +2366,29 @@ function deleteSupplier(supplierCode) {
             });
         }
 
-        // Format date for display
         function formatDate(dateString) {
-            if (!dateString) return 'N/A';
-            
-            try {
-                const date = new Date(dateString);
-                return date.toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-            } catch (e) {
-                return dateString;
-            }
+    if (!dateString) return 'N/A';
+    
+    try {
+        // Handle various date formats
+        const date = new Date(dateString);
+        
+        // Check if date is valid
+        if (isNaN(date.getTime())) {
+            return dateString; // Return original if not valid
         }
+        
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    } catch (e) {
+        return dateString;
+    }
+}
 
 let isDisplayingOrders = false;
 
@@ -2718,6 +2765,26 @@ document.getElementById('export-sales-btn').addEventListener('click', async func
     const agentSales = await calculateAgentSales();
     exportSalesToCSV(agentSales);
 });
+
+// Add these in the setupEventListeners() function:
+
+// Date from filter
+document.getElementById('date-from').addEventListener('change', function() {
+    filterOrdersTable();
+});
+
+// Date to filter
+document.getElementById('date-to').addEventListener('change', function() {
+    filterOrdersTable();
+});
+
+// Clear date filter button
+document.getElementById('clear-date-filter').addEventListener('click', function() {
+    document.getElementById('date-from').value = '';
+    document.getElementById('date-to').value = '';
+    filterOrdersTable();
+});
+
         }
 
 // Filter sales table based on search
@@ -2938,36 +3005,53 @@ function updateSupplierEditUrlPreview(type, url) {
     }
 }
 
-// Filter orders table based on search and filters
+// Filter orders table based on search, filters, and date range
 function filterOrdersTable() {
     const searchTerm = document.getElementById('order-search').value.toLowerCase();
     const statusFilter = document.getElementById('order-status-filter').value;
     const deliveryFilter = document.getElementById('order-delivery-filter').value;
-    
-    console.log('Filtering - Payment:', statusFilter, 'Delivery:', deliveryFilter);
+    const dateFrom = document.getElementById('date-from').value;
+    const dateTo = document.getElementById('date-to').value;
     
     const rows = document.querySelectorAll('#orders-table-body tr');
     
     rows.forEach(row => {
         const cells = row.querySelectorAll('td');
-        if (cells.length === 0) return; // Skip empty rows
+        if (cells.length === 0) return;
         
         const name = cells[1].textContent.toLowerCase();
         const contact = cells[2].textContent.toLowerCase();
         const address = cells[3].textContent.toLowerCase();
         const product = cells[4].textContent.toLowerCase();
-        const billCode = cells[12].textContent.toLowerCase(); // Changed from 11 to 12
+        const billCode = cells[12].textContent.toLowerCase();
         
-        // Get payment status - CORRECTED INDEX: 11 (not 10)
+        // Get payment status
         const paymentElement = cells[11].querySelector('.status');
         const paymentStatus = paymentElement ? paymentElement.textContent.trim().toLowerCase() : '';
         
-        // Get delivery status - CORRECTED INDEX: 13 (not 12)
+        // Get delivery status
         const deliveryElement = cells[13].querySelector('.status');
         const deliveryStatus = deliveryElement ? deliveryElement.textContent.trim().toLowerCase() : '';
         
-        console.log('Row status - Payment:', paymentStatus, 'Delivery:', deliveryStatus);
+        // Get timestamp from first cell
+        const timestampText = cells[0].textContent;
         
+        // Parse date from timestamp
+        let orderDate = null;
+        try {
+            // Try to parse the date from the formatted timestamp
+            const dateMatch = timestampText.match(/\w{3} \d{1,2}, \d{4}/);
+            if (dateMatch) {
+                orderDate = new Date(dateMatch[0]);
+            } else {
+                // Try parsing as ISO string
+                orderDate = new Date(timestampText);
+            }
+        } catch (e) {
+            orderDate = null;
+        }
+        
+        // Check search term match
         const matchesSearch = !searchTerm || 
             name.includes(searchTerm) || 
             contact.includes(searchTerm) || 
@@ -2975,29 +3059,55 @@ function filterOrdersTable() {
             product.includes(searchTerm) ||
             billCode.includes(searchTerm);
         
-        // Payment status comparison
+        // Check payment status match
         let matchesStatus = true;
         if (statusFilter !== 'all') {
             matchesStatus = paymentStatus === statusFilter.toLowerCase();
-            console.log('Payment match?', paymentStatus, '==', statusFilter.toLowerCase(), '=', matchesStatus);
         }
         
-        // Delivery status comparison
+        // Check delivery status match
         let matchesDelivery = true;
         if (deliveryFilter !== 'all') {
             matchesDelivery = deliveryStatus === deliveryFilter.toLowerCase();
-            console.log('Delivery match?', deliveryStatus, '==', deliveryFilter.toLowerCase(), '=', matchesDelivery);
         }
         
-        if (matchesSearch && matchesStatus && matchesDelivery) {
+        // Check date range match
+        let matchesDateRange = true;
+        if (dateFrom || dateTo) {
+            if (!orderDate) {
+                matchesDateRange = false;
+            } else {
+                const fromDate = dateFrom ? new Date(dateFrom) : null;
+                const toDate = dateTo ? new Date(dateTo) : null;
+                
+                if (fromDate) {
+                    fromDate.setHours(0, 0, 0, 0);
+                }
+                if (toDate) {
+                    toDate.setHours(23, 59, 59, 999);
+                }
+                
+                const orderDateTime = orderDate.getTime();
+                
+                if (fromDate && toDate) {
+                    matchesDateRange = orderDateTime >= fromDate.getTime() && 
+                                      orderDateTime <= toDate.getTime();
+                } else if (fromDate) {
+                    matchesDateRange = orderDateTime >= fromDate.getTime();
+                } else if (toDate) {
+                    matchesDateRange = orderDateTime <= toDate.getTime();
+                }
+            }
+        }
+        
+        // Show/hide row based on all filters
+        if (matchesSearch && matchesStatus && matchesDelivery && matchesDateRange) {
             row.style.display = '';
         } else {
             row.style.display = 'none';
         }
     });
-    
-    console.log('Filtering complete');
-}        
+}
 
         // Filter agents table based on search
         function filterAgentsTable() {
