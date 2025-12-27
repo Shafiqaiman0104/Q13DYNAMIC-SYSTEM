@@ -1312,6 +1312,19 @@
             <i class="fas fa-search"></i>
             <input type="text" id="sales-search" placeholder="Search by UserId...">
         </div>
+        <div class="date-filter-container" style="display: flex; gap: 10px; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 5px;">
+                <label style="font-weight: 600; color: var(--dark-color);">From:</label>
+                <input type="date" id="sales-date-from" class="filter-select" style="padding: 0.6rem;">
+            </div>
+            <div style="display: flex; align-items: center; gap: 5px;">
+                <label style="font-weight: 600; color: var(--dark-color);">To:</label>
+                <input type="date" id="sales-date-to" class="filter-select" style="padding: 0.6rem;">
+            </div>
+            <button id="clear-sales-date-filter" class="action-btn" style="padding: 0.6rem 1rem; background-color: #6c757d;">
+                <i class="fas fa-times"></i> Clear
+            </button>
+        </div>
         <div>
             <button class="action-btn" id="refresh-sales-btn">
                 <i class="fas fa-sync-alt"></i> Refresh Data
@@ -2760,11 +2773,8 @@ document.getElementById('editSupplierForm').addEventListener('submit', handleEdi
         calculateAgentSales();
     });
     
-    // Export sales button
-document.getElementById('export-sales-btn').addEventListener('click', async function() {
-    const agentSales = await calculateAgentSales();
-    exportSalesToCSV(agentSales);
-});
+// Export sales button - updated to use the new function
+document.getElementById('export-sales-btn').addEventListener('click', exportSalesToCSV);
 
 // Add these in the setupEventListeners() function:
 
@@ -2783,6 +2793,23 @@ document.getElementById('clear-date-filter').addEventListener('click', function(
     document.getElementById('date-from').value = '';
     document.getElementById('date-to').value = '';
     filterOrdersTable();
+});
+
+// Sales date from filter
+document.getElementById('sales-date-from').addEventListener('change', function() {
+    calculateAgentSales();
+});
+
+// Sales date to filter
+document.getElementById('sales-date-to').addEventListener('change', function() {
+    calculateAgentSales();
+});
+
+// Clear sales date filter button
+document.getElementById('clear-sales-date-filter').addEventListener('click', function() {
+    document.getElementById('sales-date-from').value = '';
+    document.getElementById('sales-date-to').value = '';
+    calculateAgentSales();
 });
 
         }
@@ -3817,7 +3844,7 @@ async function getProductByCode(productCode) {
     }
 }
 
-// Function to calculate agent sales and commissions
+// Function to calculate agent sales and commissions with date filtering
 async function calculateAgentSales() {
     try {
         const salesLoading = document.getElementById('sales-loading');
@@ -3829,6 +3856,10 @@ async function calculateAgentSales() {
         salesTable.style.display = 'none';
         salesTableBody.innerHTML = '';
         
+        // Get date filters
+        const dateFrom = document.getElementById('sales-date-from').value;
+        const dateTo = document.getElementById('sales-date-to').value;
+        
         // Make sure suppliers data is loaded
         if (!suppliersData || suppliersData.length === 0) {
             suppliersData = await fetchSuppliersData();
@@ -3837,8 +3868,43 @@ async function calculateAgentSales() {
         // Group orders by UserId
         const agentSales = {};
         
-        // Process each order
+        // Process each order with date filtering
         for (const order of ordersData) {
+            // Check if order is within date range
+            if (dateFrom || dateTo) {
+                const orderDate = new Date(order.Timestamp || '');
+                
+                if (isNaN(orderDate.getTime())) {
+                    continue; // Skip invalid dates
+                }
+                
+                const fromDate = dateFrom ? new Date(dateFrom) : null;
+                const toDate = dateTo ? new Date(dateTo) : null;
+                
+                if (fromDate) {
+                    fromDate.setHours(0, 0, 0, 0);
+                }
+                if (toDate) {
+                    toDate.setHours(23, 59, 59, 999);
+                }
+                
+                const orderDateTime = orderDate.getTime();
+                
+                let isInDateRange = true;
+                if (fromDate && toDate) {
+                    isInDateRange = orderDateTime >= fromDate.getTime() && 
+                                   orderDateTime <= toDate.getTime();
+                } else if (fromDate) {
+                    isInDateRange = orderDateTime >= fromDate.getTime();
+                } else if (toDate) {
+                    isInDateRange = orderDateTime <= toDate.getTime();
+                }
+                
+                if (!isInDateRange) {
+                    continue; // Skip orders outside date range
+                }
+            }
+            
             const userId = order.UserId || 'N/A';
             
             if (!agentSales[userId]) {
@@ -3966,30 +4032,56 @@ function displayAgentSales(agentSales) {
     salesTable.style.display = 'table';
 }
 
-// Function to export sales data to CSV
-function exportSalesToCSV(agentSales) {
-    const agentsArray = Object.values(agentSales);
-    agentsArray.sort((a, b) => a.userId.localeCompare(b.userId));
-    
-    // CSV header
-    let csv = 'User ID,Total Orders,Total Qty Product,Total Postage (RM),Total Discount Code (RM),Total Spin Prize (RM),Total Price (RM),Total Commission (RM),Total Supplier (RM),Total Profit (RM)\n';
-    
-    // CSV data
-    agentsArray.forEach(agent => {
-        csv += `"${agent.userId}",${agent.totalOrders},${agent.totalQty},${agent.totalPostage.toFixed(2)},${agent.totalDiscount.toFixed(2)},${agent.totalSpinPrize.toFixed(2)},${agent.totalPrice.toFixed(2)},${agent.totalCommission.toFixed(2)},${agent.totalSupplier.toFixed(2)},${agent.totalProfit.toFixed(2)}\n`;
-    });
-    
-    // Create download link
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `sales_commission_${new Date().toISOString().split('T')[0]}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
+// Function to export sales data to CSV with date filtering
+async function exportSalesToCSV() {
+    try {
+        // Calculate sales with current date filters
+        const agentSales = await calculateAgentSales();
+        const agentsArray = Object.values(agentSales);
+        agentsArray.sort((a, b) => a.userId.localeCompare(b.userId));
+        
+        // Get date range for filename
+        const dateFrom = document.getElementById('sales-date-from').value;
+        const dateTo = document.getElementById('sales-date-to').value;
+        
+        let filename = 'sales_commission';
+        if (dateFrom || dateTo) {
+            if (dateFrom && dateTo) {
+                filename += `_${dateFrom}_to_${dateTo}`;
+            } else if (dateFrom) {
+                filename += `_from_${dateFrom}`;
+            } else if (dateTo) {
+                filename += `_to_${dateTo}`;
+            }
+        } else {
+            filename += `_${new Date().toISOString().split('T')[0]}`;
+        }
+        filename += '.csv';
+        
+        // CSV header
+        let csv = 'User ID,Total Orders,Total Qty Product,Total Postage (RM),Total Discount Code (RM),Total Spin Prize (RM),Total Price (RM),Total Commission (RM),Total Supplier (RM),Total Profit (RM)\n';
+        
+        // CSV data
+        agentsArray.forEach(agent => {
+            csv += `"${agent.userId}",${agent.totalOrders},${agent.totalQty},${agent.totalPostage.toFixed(2)},${agent.totalDiscount.toFixed(2)},${agent.totalSpinPrize.toFixed(2)},${agent.totalPrice.toFixed(2)},${agent.totalCommission.toFixed(2)},${agent.totalSupplier.toFixed(2)},${agent.totalProfit.toFixed(2)}\n`;
+        });
+        
+        // Create download link
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+    } catch (error) {
+        console.error('Error exporting CSV:', error);
+        alert('Error exporting CSV: ' + error.message);
+    }
 }
+
     </script>
 </body>
 </html>
