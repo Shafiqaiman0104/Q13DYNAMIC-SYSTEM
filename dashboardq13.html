@@ -1862,21 +1862,27 @@
             </div>
 
             <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label" for="edit-order-bill-code">Bill Code</label>
-                    <input type="text" class="form-input" id="edit-order-bill-code" name="billCode" disabled style="background-color: #f5f5f5;">
-                </div>
-                <div class="form-group">
-                    <label class="form-label" for="edit-order-delivery-status">Delivery Status *</label>
-                    <select class="form-input" id="edit-order-delivery-status" name="deliveryStatus" required>
-                        <option value="pending">Pending</option>
-                        <option value="Notice">Notice</option>
-                        <option value="Packing">Packing</option>
-                        <option value="On Delivery">On Delivery</option>
-                        <option value="Complete">Complete</option>
-                    </select>
-                </div>
-            </div>
+    <div class="form-group">
+        <label class="form-label" for="edit-order-bill-code">Bill Code</label>
+        <div style="display: flex; gap: 5px;">
+            <input type="text" class="form-input" id="edit-order-bill-code" name="billCode" style="flex: 1;" disabled>
+            <button type="button" class="action-btn" id="generate-bill-code" style="white-space: nowrap; padding: 0.8rem 1rem;">
+                <i class="fas fa-sync-alt"></i> Generate
+            </button>
+        </div>
+        <div id="bill-code-message" style="font-size: 0.85rem; margin-top: 5px; display: none;"></div>
+    </div>
+    <div class="form-group">
+        <label class="form-label" for="edit-order-delivery-status">Delivery Status *</label>
+        <select class="form-input" id="edit-order-delivery-status" name="deliveryStatus" required>
+            <option value="pending">Pending</option>
+            <option value="Notice">Notice</option>
+            <option value="Packing">Packing</option>
+            <option value="On Delivery">On Delivery</option>
+            <option value="Complete">Complete</option>
+        </select>
+    </div>
+</div>
 
             <div class="form-row">
                 <div class="form-group">
@@ -2992,6 +2998,46 @@ document.getElementById('clear-sales-date-filter').addEventListener('click', fun
     calculateAgentSales();
 });
 
+// Generate bill code button
+document.getElementById('generate-bill-code').addEventListener('click', async function() {
+    const billCodeInput = document.getElementById('edit-order-bill-code');
+    const messageDiv = document.getElementById('bill-code-message');
+    
+    // Show loading message
+    messageDiv.textContent = 'Generating unique bill code...';
+    messageDiv.style.color = '#007bff';
+    messageDiv.style.display = 'block';
+    
+    // Disable button during generation
+    this.disabled = true;
+    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+    
+    try {
+        const newBillCode = await generateUniqueBillCode();
+        billCodeInput.value = newBillCode;
+        
+        // Show success message
+        messageDiv.textContent = `✓ Unique bill code generated: ${newBillCode}`;
+        messageDiv.style.color = '#28a745';
+        
+        // Alert the user
+        setTimeout(() => {
+            alert(`Bill code = ${newBillCode}\n\nYou can now click "Update Order" to save with this new bill code.`);
+        }, 100);
+        
+    } catch (error) {
+        // Show error message
+        messageDiv.textContent = '✗ Error generating bill code: ' + error.message;
+        messageDiv.style.color = '#dc3545';
+        
+        alert('Failed to generate unique bill code. Please try again.');
+    } finally {
+        // Re-enable button
+        this.disabled = false;
+        this.innerHTML = '<i class="fas fa-sync-alt"></i> Generate';
+    }
+});
+
         }
 
 // Filter sales table based on search
@@ -3411,7 +3457,9 @@ async function editOrder(billCode) {
         document.getElementById('edit-order-spin-prize').value = order.spinPrize || '';
         document.getElementById('edit-order-total').value = order.totalPrice || 0;
         document.getElementById('edit-order-payment-status').value = order.paymentStatus || 'pending';
-        document.getElementById('edit-order-bill-code').value = order.billCode || '';
+        const billCodeValue = order.billCode || '';
+        document.getElementById('edit-order-bill-code').value = billCodeValue;
+        document.getElementById('bill-code-message').style.display = 'none'; // Hide message
         document.getElementById('edit-order-delivery-status').value = order.deliveryStatus || 'pending';
         document.getElementById('edit-order-userid').value = order.userId || '';
         document.getElementById('edit-order-remark').value = order.remark || '';
@@ -3423,6 +3471,47 @@ async function editOrder(billCode) {
         console.error('Error loading order for editing:', error);
         alert('Error loading order: ' + error.message);
     }
+}
+
+// Generate random 8-character alphanumeric code
+function generateBillCode() {
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < 8; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+}
+
+// Check if bill code exists in database
+async function checkBillCodeExists(billCode) {
+    try {
+        const response = await fetch(`${ORDER_DATABASE_URL}?orderId=${encodeURIComponent(billCode)}`);
+        const result = await response.json();
+        return result.success; // Returns true if bill code exists
+    } catch (error) {
+        console.error('Error checking bill code:', error);
+        return false;
+    }
+}
+
+// Generate unique bill code
+async function generateUniqueBillCode() {
+    let attempts = 0;
+    const maxAttempts = 20;
+    
+    while (attempts < maxAttempts) {
+        const newBillCode = generateBillCode();
+        const exists = await checkBillCodeExists(newBillCode);
+        
+        if (!exists) {
+            return newBillCode;
+        }
+        attempts++;
+    }
+    
+    // If we can't find a unique code after max attempts
+    throw new Error('Unable to generate unique bill code after multiple attempts');
 }
 
        // Delete Order - Opens confirmation modal
@@ -3455,6 +3544,7 @@ document.getElementById('editOrderForm').addEventListener('submit', async functi
         action: 'updateOrder',
         originalBillCode: formData.get('originalBillCode'),
         rowNumber: formData.get('rowNumber'),
+        billCode: document.getElementById('edit-order-bill-code').value, // ADD THIS LINE
         name: document.getElementById('edit-order-name').value,
         phone: document.getElementById('edit-order-phone').value,
         email: document.getElementById('edit-order-email').value,
