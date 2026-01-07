@@ -772,6 +772,12 @@
         width: 100%;
     }
 }
+.form-input:disabled {
+    background-color: #f5f5f5;
+    color: #888;
+    cursor: not-allowed;
+    border-color: #ddd;
+}
     </style>
 </head>
 <body>
@@ -1007,16 +1013,20 @@
                 </div>
                 <table class="data-table" id="agents-table" style="display: none;">
                     <thead>
-                        <tr>
-                            <th>Agent ID</th>
-                            <th>Name</th>
-                            <th>Phone</th>
-                            <th>Email</th>
-                            <th>Address</th>
-                            <th>Timestamp</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
+    <tr>
+        <th>Agent ID</th>
+        <th>Name</th>
+        <th>Phone</th>
+        <th>Email</th>
+        <th>Address</th>
+        <th>Status</th>
+        <th>Type</th>
+        <th>Bank Name</th>
+        <th>Bank Account Number</th>
+        <th>Timestamp</th>
+        <th>Actions</th>
+    </tr>
+</thead>
                     <tbody id="agents-table-body">
                         <!-- Agents data will be populated here -->
                     </tbody>
@@ -1626,6 +1636,34 @@
                 <textarea class="form-input" id="new-agent-address" name="address" rows="3"></textarea>
             </div>
 
+<div class="form-row">
+    <div class="form-group">
+        <label class="form-label" for="new-agent-status">Status</label>
+        <select class="form-input" id="new-agent-status" name="status" disabled>
+            <option value="pending">Pending</option>
+            <option value="approve">Approve</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label class="form-label" for="new-agent-type">Type</label>
+        <select class="form-input" id="new-agent-type" name="type" disabled>
+            <option value="basic">Basic</option>
+            <option value="premium">Premium</option>
+        </select>
+    </div>
+</div>
+
+<div class="form-row">
+    <div class="form-group">
+        <label class="form-label" for="new-agent-bank-name">Bank Name</label>
+        <input type="text" class="form-input" id="new-agent-bank-name" name="bankName" disabled>
+    </div>
+    <div class="form-group">
+        <label class="form-label" for="new-agent-bank-account">Bank Account Number</label>
+        <input type="text" class="form-input" id="new-agent-bank-account" name="bankAccount" disabled>
+    </div>
+</div>
+
             <div class="form-actions">
                 <button type="button" class="btn btn-secondary" onclick="closeAddAgentModal()">Cancel</button>
                 <button type="submit" class="btn btn-primary">Save Agent</button>
@@ -1670,6 +1708,34 @@
                 <label class="form-label" for="edit-agent-address">Address</label>
                 <textarea class="form-input" id="edit-agent-address" name="address" rows="3"></textarea>
             </div>
+
+<div class="form-row">
+    <div class="form-group">
+        <label class="form-label" for="edit-agent-status">Status</label>
+        <select class="form-input" id="edit-agent-status" name="status" required>
+            <option value="pending">Pending</option>
+            <option value="approve">Approve</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label class="form-label" for="edit-agent-type">Type</label>
+        <select class="form-input" id="edit-agent-type" name="type" required>
+            <option value="basic">Basic</option>
+            <option value="premium">Premium</option>
+        </select>
+    </div>
+</div>
+
+<div class="form-row">
+    <div class="form-group">
+        <label class="form-label" for="edit-agent-bank-name">Bank Name</label>
+        <input type="text" class="form-input" id="edit-agent-bank-name" name="bankName">
+    </div>
+    <div class="form-group">
+        <label class="form-label" for="edit-agent-bank-account">Bank Account Number</label>
+        <input type="text" class="form-input" id="edit-agent-bank-account" name="bankAccount">
+    </div>
+</div>
 
             <div class="form-row">
                 <div class="form-group">
@@ -2675,7 +2741,7 @@ const profit = total - postageFee - toyyibpayFee - commission - supplierTotal;
             if (!agentsData || agentsData.length === 0) {
                 tableBody.innerHTML = `
                     <tr>
-                        <td colspan="7" style="text-align: center; padding: 2rem;">
+                        <td colspan="11" style="text-align: center; padding: 2rem;">
                             <i class="fas fa-exclamation-circle" style="font-size: 2rem; color: #6c757d; margin-bottom: 1rem;"></i>
                             <p>No agents data available.</p>
                         </td>
@@ -2699,23 +2765,31 @@ const profit = total - postageFee - toyyibpayFee - commission - supplierTotal;
                 const phone = escapeHtml(agent.Phone || agent.Phone || 'N/A');
                 const email = escapeHtml(agent.Email || agent['Email '] || 'N/A'); // Try both with and without space
                 const address = escapeHtml(agent.Address || agent.Address || 'N/A');
+                const status = escapeHtml(agent.Status || 'pending');
+                const type = escapeHtml(agent.Type || 'basic');
+                const bankName = escapeHtml(agent['Bank Name'] || 'n/a');
+                const bankAccount = escapeHtml(agent['Bank Account Number'] || 'n/a');
                 
                 row.innerHTML = `
-                    <td>${agentId}</td>
-                    <td>${name}</td>
-                    <td>${phone}</td>
-                    <td>${email}</td>
-                    <td><div class="compact-text" title="${address}">${address}</div></td>
-                    <td>${formatDate(agent.Timestamp || agent.Timestamp)}</td>
-                    <td>
-                        <button class="action-btn edit" onclick="editAgent('${agentId}')">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="action-btn delete" onclick="deleteAgent('${agentId}')">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                `;
+    <td>${agentId}</td>
+    <td>${name}</td>
+    <td>${phone}</td>
+    <td>${email}</td>
+    <td><div class="compact-text" title="${address}">${address}</div></td>
+    <td><span class="status ${status === 'approve' ? 'paid' : 'pending'}">${status}</span></td>
+    <td><span class="status ${type === 'premium' ? 'delivered' : 'pending'}">${type}</span></td>
+    <td>${bankName}</td>
+    <td>${bankAccount}</td>
+    <td>${formatDate(agent.Timestamp || agent.Timestamp)}</td>
+    <td>
+        <button class="action-btn edit" onclick="editAgent('${agentId}')">
+            <i class="fas fa-edit"></i>
+        </button>
+        <button class="action-btn delete" onclick="deleteAgent('${agentId}')">
+            <i class="fas fa-trash"></i>
+        </button>
+    </td>
+`;
                 
                 tableBody.appendChild(row);
             });
@@ -3255,12 +3329,16 @@ function filterOrdersTable() {
                 const phone = cells[2].textContent.toLowerCase();
                 const email = cells[3].textContent.toLowerCase();
                 const agentId = cells[0].textContent.toLowerCase();
+                const status = cells[5].textContent.toLowerCase();
+                const type = cells[6].textContent.toLowerCase();
                 
                 const matchesSearch = !searchTerm || 
-                    name.includes(searchTerm) || 
-                    phone.includes(searchTerm) || 
-                    email.includes(searchTerm) ||
-                    agentId.includes(searchTerm);
+    name.includes(searchTerm) || 
+    phone.includes(searchTerm) || 
+    email.includes(searchTerm) ||
+    agentId.includes(searchTerm) ||
+    status.includes(searchTerm) ||    // Optional: add if you want to search by status
+    type.includes(searchTerm);        // Optional: add if you want to search by type
                 
                 if (matchesSearch) {
                     row.style.display = '';
@@ -3477,6 +3555,10 @@ function editAgent(agentId) {
     document.getElementById('edit-agent-phone').value = agent.Phone || '';
     document.getElementById('edit-agent-email').value = agent.Email || agent['Email '] || '';
     document.getElementById('edit-agent-address').value = agent.Address || '';
+document.getElementById('edit-agent-status').value = agent.Status || 'pending';
+document.getElementById('edit-agent-type').value = agent.Type || 'basic';
+document.getElementById('edit-agent-bank-name').value = agent['Bank Name'] || 'n/a';
+document.getElementById('edit-agent-bank-account').value = agent['Bank Account Number'] || 'n/a';
     
     // Display timestamp (disabled field)
     document.getElementById('edit-agent-timestamp-display').value = formatDate(agent.Timestamp || '');
@@ -3777,13 +3859,17 @@ document.getElementById('addAgentForm').addEventListener('submit', async functio
     
     const formData = new FormData(e.target);
     const agentData = {
-        action: 'add',
-        agentId: formData.get('agentId'),
-        name: formData.get('name'),
-        phone: formData.get('phone'),
-        email: formData.get('email'),
-        address: formData.get('address')
-    };
+    action: 'add',
+    agentId: formData.get('agentId'),
+    name: formData.get('name'),
+    phone: formData.get('phone'),
+    email: formData.get('email'),
+    address: formData.get('address'),
+    status: formData.get('status') || 'pending',
+    type: formData.get('type') || 'basic',
+    bankName: formData.get('bankName') || 'n/a',
+    bankAccount: formData.get('bankAccount') || 'n/a'
+};
     
     // Validate required fields
     if (!agentData.agentId || !agentData.name || !agentData.phone || !agentData.email) {
@@ -3821,14 +3907,18 @@ document.getElementById('editAgentForm').addEventListener('submit', async functi
     
     const formData = new FormData(e.target);
     const agentData = {
-        action: 'update',
-        timestamp: formData.get('timestamp'),
-        agentId: formData.get('agentId'),
-        name: formData.get('name'),
-        phone: formData.get('phone'),
-        email: formData.get('email'),
-        address: formData.get('address')
-    };
+    action: 'update',
+    timestamp: formData.get('timestamp'),
+    agentId: formData.get('agentId'),
+    name: formData.get('name'),
+    phone: formData.get('phone'),
+    email: formData.get('email'),
+    address: formData.get('address'),
+    status: formData.get('status') || 'pending',
+    type: formData.get('type') || 'basic',
+    bankName: formData.get('bankName') || 'n/a',
+    bankAccount: formData.get('bankAccount') || 'n/a'
+};
     
     // Validate required fields
     if (!agentData.timestamp || !agentData.agentId || !agentData.name || !agentData.phone || !agentData.email) {
