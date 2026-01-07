@@ -2642,6 +2642,12 @@ function getLast12Months() {
     }
 }
 
+// Add this helper function
+function escapeJs(value) {
+    if (!value) return "''";
+    return "'" + value.replace(/'/g, "\\'") + "'";
+}
+
 let isDisplayingOrders = false;
 
 async function displayOrdersData() {
@@ -2771,7 +2777,7 @@ const profit = total - postageFee - toyyibpayFee - commission - supplierTotal;
     <button class="action-btn delete" onclick="deleteOrder('${billCode}')">
         <i class="fas fa-trash"></i>
     </button>
-    <button class="action-btn" onclick="sendWhatsAppMessage('${name}', '${phone}', '${email}', '${address}', '${productCode}', '${productName}', ${productQuantity}, '${note || 'None'}', '${discountCode}', ${spinPrize}, ${postageFee}, ${total}, '${billCode}', '${userId}')" style="background-color: #25D366;">
+    <button class="action-btn" onclick="sendWhatsAppMessage(${escapeJs(name)}, ${escapeJs(phone)}, ${escapeJs(email)}, ${escapeJs(address)}, ${escapeJs(productCode)}, ${escapeJs(productName)}, ${productQuantity}, ${escapeJs(note || 'None')}, ${escapeJs(discountCode)}, ${escapeJs(spinPrize)}, ${postageFee}, ${total}, ${escapeJs(billCode)}, ${escapeJs(userId)})" style="background-color: #25D366;">
         <i class="fab fa-whatsapp"></i>
     </button>
     </td>
