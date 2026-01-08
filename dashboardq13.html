@@ -1169,7 +1169,7 @@
     <div class="filters">
         <div class="search-box">
             <i class="fas fa-search"></i>
-            <input type="text" id="supplier-search" placeholder="Search suppliers by name, code, or style...">
+            <input type="text" id="supplier-search" placeholder="Search ALL supplier data...">
         </div>
         <button class="action-btn" id="add-supplier-btn">
             <i class="fas fa-plus"></i> Add Supplier Product
@@ -3147,7 +3147,7 @@ function filterSalesTable() {
     });
 }
 
-// Filter suppliers table
+// Filter suppliers table - UPDATED FOR GLOBAL SEARCH
 function filterSuppliersTable() {
     const searchTerm = document.getElementById('supplier-search').value.toLowerCase();
     const rows = document.querySelectorAll('#suppliers-table-body tr');
@@ -3156,14 +3156,19 @@ function filterSuppliersTable() {
         const cells = row.querySelectorAll('td');
         if (cells.length === 0) return;
         
-        const code = cells[0].textContent.toLowerCase();
-        const name = cells[1].textContent.toLowerCase();
-        const style = cells[3].textContent.toLowerCase();
-        
-        const matchesSearch = !searchTerm || 
-            code.includes(searchTerm) || 
-            name.includes(searchTerm) || 
-            style.includes(searchTerm);
+        // Check ALL columns for search term (excluding the Actions column)
+        let matchesSearch = !searchTerm;
+        if (searchTerm) {
+            matchesSearch = false;
+            // Check each cell (except the last Actions column)
+            for (let i = 0; i < cells.length - 1; i++) { // -1 to exclude Actions column
+                const cellText = cells[i].textContent.toLowerCase();
+                if (cellText.includes(searchTerm)) {
+                    matchesSearch = true;
+                    break; // Stop checking if found in any column
+                }
+            }
+        }
         
         if (matchesSearch) {
             row.style.display = '';
