@@ -778,6 +778,10 @@
     cursor: not-allowed;
     border-color: #ddd;
 }
+/* WhatsApp button specific styles */
+.action-btn[style*="background-color: #25D366;"]:hover {
+    background-color: #128C7E !important;
+}
     </style>
 </head>
 <body>
@@ -2132,6 +2136,68 @@ document.addEventListener('DOMContentLoaded', async function() {
             }
         }
 
+// Function to generate and send WhatsApp message - FIXED CALCULATION
+function sendWhatsAppMessage(name, phone, email, address, productCode, productName, productQuantity, note, discountCode, spinPrize, postageFee, total, billCode, userId) {
+    // Parse numeric values
+    const totalNum = parseFloat(total) || 0;
+    const postageNum = parseFloat(postageFee) || 0;
+    const spinPrizeNum = parseFloat(spinPrize) || 0;
+    const adminFee = 1; // RM1 admin fee (toyyibpay)
+    
+    // FIXED CALCULATION: Product price = total + discount + spin prize - postage - admin fee
+    // Assuming discount is RM5 if discountCode exists
+    const discountValue = (discountCode && discountCode !== 'N/A' && discountCode !== '') ? 5 : 0;
+    const productTotal = totalNum + discountValue + spinPrizeNum - postageNum - adminFee;
+    const productPricePerUnit = productTotal / productQuantity;
+    
+    // Prepare the message template
+    const message = `Thank You!
+We receive your order!
+
+*Your Order Id = ${billCode}*
+
+Please check your details below:
+
+Name : ${name}
+Phone : ${phone}
+Email : ${email}
+Address : ${address}
+
+*Product :*
+${productCode} - ${productName} x ${productQuantity}
+
+*Special Request / Notes :*
+${note || 'None'}
+
+*Price :*
+Product price RM${productTotal.toFixed(0)} (${productQuantity} x RM${productPricePerUnit.toFixed(0)})
+Postage fee RM${postageNum} (${productQuantity} x RM${(postageNum / productQuantity).toFixed(0)})
+Admin fee RM1
+${discountCode && discountCode !== 'N/A' && discountCode !== '' ? `Discount code -RM5 (CODE = ${userId})` : ''}
+${spinPrize && spinPrize !== 'N/A' && spinPrizeNum > 0 ? `Spin the wheel -RM${spinPrizeNum}` : ''}
+
+*TOTAL : RM${totalNum}*
+
+if all the details is correct, please proceed to make a payment,
+and *send the receipt here.*
+
+*BANK DETAILS :*
+*MAYBANK*
+*MUHAMAD SHAFIQ AIMAN*
+*151605138389*
+
+*- Via Q13DYNAMIC SYSTEM*`;
+
+    // Encode the message for URL
+    const encodedMessage = encodeURIComponent(message);
+    
+    // Create WhatsApp URL
+    const whatsappUrl = `https://wa.me/${phone}?text=${encodedMessage}`;
+    
+    // Open WhatsApp in a new tab
+    window.open(whatsappUrl, '_blank');
+}
+
 // Function to fetch suppliers data
 async function fetchSuppliersData() {
     try {
@@ -2586,6 +2652,21 @@ function getLast12Months() {
     }
 }
 
+// Add this new function (or replace the existing one)
+function escapeJs(value) {
+    if (!value) return "''";
+    
+    // Replace all special characters for JavaScript string
+    return "'" + value
+        .replace(/\\/g, "\\\\")  // Backslashes first
+        .replace(/'/g, "\\'")    // Single quotes
+        .replace(/"/g, '\\"')    // Double quotes
+        .replace(/\n/g, "\\n")   // Newlines
+        .replace(/\r/g, "\\r")   // Carriage returns
+        .replace(/\t/g, "\\t")   // Tabs
+        + "'";
+}
+
 let isDisplayingOrders = false;
 
 async function displayOrdersData() {
@@ -2709,12 +2790,15 @@ const profit = total - postageFee - toyyibpayFee - commission - supplierTotal;
     <td>RM ${profit.toFixed(2)}</td>
     <td><div class="compact-text" title="${remark}">${remark}</div></td>
     <td>
-        <button class="action-btn edit" onclick="editOrder('${billCode}')">
-            <i class="fas fa-edit"></i>
-        </button>
-        <button class="action-btn delete" onclick="deleteOrder('${billCode}')">
-            <i class="fas fa-trash"></i>
-        </button>
+            <button class="action-btn edit" onclick="editOrder('${billCode}')">
+        <i class="fas fa-edit"></i>
+    </button>
+    <button class="action-btn delete" onclick="deleteOrder('${billCode}')">
+        <i class="fas fa-trash"></i>
+    </button>
+    <button class="action-btn" onclick="sendWhatsAppMessage(${escapeJs(name)}, ${escapeJs(phone)}, ${escapeJs(email)}, ${escapeJs(address)}, ${escapeJs(productCode)}, ${escapeJs(productName)}, ${productQuantity}, ${escapeJs(note || 'None')}, ${escapeJs(discountCode)}, ${escapeJs(spinPrize)}, ${postageFee}, ${total}, ${escapeJs(billCode)}, ${escapeJs(userId)})" style="background-color: #25D366;">
+        <i class="fab fa-whatsapp"></i>
+    </button>
     </td>
 `;
                 
