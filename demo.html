@@ -2154,7 +2154,7 @@ function sendWhatsAppMessage(name, phone, email, address, productCode, productNa
     const message = `Thank You!
 We receive your order!
 
-Your Order Id = ${billCode}
+*Your Order Id = ${billCode}*
 
 Please check your details below:
 
@@ -2163,28 +2163,30 @@ Phone : ${phone}
 Email : ${email}
 Address : ${address}
 
-Product :
+*Product :*
 ${productCode} - ${productName} x ${productQuantity}
 
-Special Request / Notes :
+*Special Request / Notes :*
 ${note || 'None'}
 
-Price :
+*Price :*
 Product price RM${productTotal.toFixed(0)} (${productQuantity} x RM${productPricePerUnit.toFixed(0)})
 Postage fee RM${postageNum} (${productQuantity} x RM${(postageNum / productQuantity).toFixed(0)})
 Admin fee RM1
 ${discountCode && discountCode !== 'N/A' && discountCode !== '' ? `Discount code -RM5 (CODE = ${userId})` : ''}
 ${spinPrize && spinPrize !== 'N/A' && spinPrizeNum > 0 ? `Spin the wheel -RM${spinPrizeNum}` : ''}
 
-TOTAL : RM${totalNum}
+*TOTAL : RM${totalNum}*
 
 if all the details is correct, please proceed to make a payment,
-and send the receipt here.
+and *send the receipt here.*
 
-BANK DETAILS :
-MAYBANK
-MUHAMAD SHAFIQ AIMAN
-151605138389`;
+*BANK DETAILS :*
+*MAYBANK*
+*MUHAMAD SHAFIQ AIMAN*
+*151605138389*
+
+*- Via Q13DYNAMIC SYSTEM*`;
 
     // Encode the message for URL
     const encodedMessage = encodeURIComponent(message);
