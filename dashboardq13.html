@@ -4178,12 +4178,12 @@ function getCommissionRate(productCode, suppliersData) {
 
 // Helper function to get agent commission multiplier based on status and type
 function getAgentCommissionMultiplier(userId, agentsData) {
-    if (!agentsData || !userId) return 1; // Default to full commission if agent not found
+    if (!agentsData || !userId) return 0; // Change from 1 to 0: No commission if agent not found
     
     // Find the agent in agents data
     const agent = agentsData.find(a => a['Agent ID'] === userId || a['Agent ID '] === userId);
     
-    if (!agent) return 1; // Default if agent not found
+    if (!agent) return 0; // Change from 1 to 0: No commission if agent not found
     
     const status = agent.Status || 'pending';
     const type = agent.Type || 'basic';
@@ -4199,7 +4199,7 @@ function getAgentCommissionMultiplier(userId, agentsData) {
         return 0; // No commission (0%)
     }
     
-    return 1; // Default fallback
+    return 0; // Change from 1 to 0: Default fallback - no commission
 }
 
 // Function to get supplier cost for a product
