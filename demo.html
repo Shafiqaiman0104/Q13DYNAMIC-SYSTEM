@@ -2642,10 +2642,19 @@ function getLast12Months() {
     }
 }
 
-// Add this helper function
+// Add this new function (or replace the existing one)
 function escapeJs(value) {
     if (!value) return "''";
-    return "'" + value.replace(/'/g, "\\'") + "'";
+    
+    // Replace all special characters for JavaScript string
+    return "'" + value
+        .replace(/\\/g, "\\\\")  // Backslashes first
+        .replace(/'/g, "\\'")    // Single quotes
+        .replace(/"/g, '\\"')    // Double quotes
+        .replace(/\n/g, "\\n")   // Newlines
+        .replace(/\r/g, "\\r")   // Carriage returns
+        .replace(/\t/g, "\\t")   // Tabs
+        + "'";
 }
 
 let isDisplayingOrders = false;
