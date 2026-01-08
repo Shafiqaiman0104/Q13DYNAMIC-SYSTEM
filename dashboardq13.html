@@ -928,7 +928,7 @@
             <div class="filters">
     <div class="search-box">
         <i class="fas fa-search"></i>
-        <input type="text" id="order-search" placeholder="Search orders by name, phone, email, or bill code...">
+        <input type="text" id="order-search" placeholder="Search ALL order data...">
     </div>
     <div class="date-filter-container" style="display: flex; gap: 10px; align-items: center;">
         <div style="display: flex; align-items: center; gap: 5px;">
@@ -3343,7 +3343,7 @@ function updateSupplierEditUrlPreview(type, url) {
     }
 }
 
-// Filter orders table based on search, filters, and date range
+// Filter orders table based on search, filters, and date range - UPDATED FOR GLOBAL SEARCH
 function filterOrdersTable() {
     const searchTerm = document.getElementById('order-search').value.toLowerCase();
     const statusFilter = document.getElementById('order-status-filter').value;
@@ -3357,11 +3357,19 @@ function filterOrdersTable() {
         const cells = row.querySelectorAll('td');
         if (cells.length === 0) return;
         
-        const name = cells[1].textContent.toLowerCase();
-        const contact = cells[2].textContent.toLowerCase();
-        const address = cells[3].textContent.toLowerCase();
-        const product = cells[4].textContent.toLowerCase();
-        const billCode = cells[12].textContent.toLowerCase();
+        // Check ALL columns for search term (excluding the Actions column)
+        let matchesSearch = !searchTerm;
+        if (searchTerm) {
+            matchesSearch = false;
+            // Check each cell (except the last Actions column)
+            for (let i = 0; i < cells.length - 1; i++) { // -1 to exclude Actions column
+                const cellText = cells[i].textContent.toLowerCase();
+                if (cellText.includes(searchTerm)) {
+                    matchesSearch = true;
+                    break; // Stop checking if found in any column
+                }
+            }
+        }
         
         // Get payment status
         const paymentElement = cells[11].querySelector('.status');
@@ -3388,14 +3396,6 @@ function filterOrdersTable() {
         } catch (e) {
             orderDate = null;
         }
-        
-        // Check search term match
-        const matchesSearch = !searchTerm || 
-            name.includes(searchTerm) || 
-            contact.includes(searchTerm) || 
-            address.includes(searchTerm) ||
-            product.includes(searchTerm) ||
-            billCode.includes(searchTerm);
         
         // Check payment status match
         let matchesStatus = true;
