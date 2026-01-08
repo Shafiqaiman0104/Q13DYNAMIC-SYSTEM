@@ -1003,7 +1003,7 @@
             <div class="filters">
                 <div class="search-box">
                     <i class="fas fa-search"></i>
-                    <input type="text" id="agent-search" placeholder="Search agents by name, phone, or email...">
+                    <input type="text" id="agent-search" placeholder="Search ALL agent data...">
                 </div>
                 <button class="action-btn" id="add-agent-btn">
                     <i class="fas fa-plus"></i> Add Agent
@@ -3447,37 +3447,36 @@ function filterOrdersTable() {
     });
 }
 
-        // Filter agents table based on search
-        function filterAgentsTable() {
-            const searchTerm = document.getElementById('agent-search').value.toLowerCase();
-            const rows = document.querySelectorAll('#agents-table-body tr');
-            
-            rows.forEach(row => {
-                const cells = row.querySelectorAll('td');
-                if (cells.length === 0) return; // Skip empty rows
-                
-                const name = cells[1].textContent.toLowerCase();
-                const phone = cells[2].textContent.toLowerCase();
-                const email = cells[3].textContent.toLowerCase();
-                const agentId = cells[0].textContent.toLowerCase();
-                const status = cells[5].textContent.toLowerCase();
-                const type = cells[6].textContent.toLowerCase();
-                
-                const matchesSearch = !searchTerm || 
-    name.includes(searchTerm) || 
-    phone.includes(searchTerm) || 
-    email.includes(searchTerm) ||
-    agentId.includes(searchTerm) ||
-    status.includes(searchTerm) ||    // Optional: add if you want to search by status
-    type.includes(searchTerm);        // Optional: add if you want to search by type
-                
-                if (matchesSearch) {
-                    row.style.display = '';
-                } else {
-                    row.style.display = 'none';
+        // Filter agents table based on search - UPDATED FOR GLOBAL SEARCH
+function filterAgentsTable() {
+    const searchTerm = document.getElementById('agent-search').value.toLowerCase();
+    const rows = document.querySelectorAll('#agents-table-body tr');
+    
+    rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length === 0) return; // Skip empty rows
+        
+        // Check ALL columns for search term (excluding the Actions column)
+        let matchesSearch = !searchTerm;
+        if (searchTerm) {
+            matchesSearch = false;
+            // Check each cell (except the last Actions column)
+            for (let i = 0; i < cells.length - 1; i++) { // -1 to exclude Actions column
+                const cellText = cells[i].textContent.toLowerCase();
+                if (cellText.includes(searchTerm)) {
+                    matchesSearch = true;
+                    break; // Stop checking if found in any column
                 }
-            });
+            }
         }
+        
+        if (matchesSearch) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
 
 
                 // Filter products table based on search
