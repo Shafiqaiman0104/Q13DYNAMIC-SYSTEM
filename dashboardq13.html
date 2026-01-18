@@ -790,6 +790,57 @@
 .action-btn[style*="background-color: #25D366;"]:hover {
     background-color: #128C7E !important;
 }
+/* Loading button styles */
+.action-btn.loading {
+    position: relative;
+    color: transparent !important;
+}
+
+.action-btn.loading::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin-left: -8px;
+    margin-top: -8px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: button-spin 0.6s linear infinite;
+}
+
+@keyframes button-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Modal button loading styles */
+.btn.loading {
+    position: relative;
+    color: transparent !important;
+}
+
+.btn.loading::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    top: 50%;
+    left: 50%;
+    margin-left: -10px;
+    margin-top: -10px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: button-spin 0.6s linear infinite;
+}
+
+/* Loading text */
+.loading-text {
+    opacity: 0.8;
+    font-style: italic;
+}
     </style>
 </head>
 <body>
@@ -3244,6 +3295,14 @@ function filterSuppliersTable() {
 // Handle add supplier form submission
 async function handleAddSupplierSubmit(e) {
     e.preventDefault();
+
+const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    // Add loading state
+    submitBtn.disabled = true;
+    submitBtn.classList.add('loading');
+    submitBtn.innerHTML = 'Loading...';
     
     const formData = new FormData(e.target);
     const supplierData = {
@@ -3294,12 +3353,25 @@ async function handleAddSupplierSubmit(e) {
         }
     } catch (error) {
         alert('Error adding supplier product: ' + error.message);
+    } finally {
+        // Restore button state
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('loading');
+        submitBtn.innerHTML = originalText;
     }
 }
 
 // Handle edit supplier form submission
 async function handleEditSupplierSubmit(e) {
     e.preventDefault();
+
+ const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    // Add loading state
+    submitBtn.disabled = true;
+    submitBtn.classList.add('loading');
+    submitBtn.innerHTML = 'Loading...';
     
     const formData = new FormData(e.target);
     const supplierData = {
@@ -3341,12 +3413,24 @@ async function handleEditSupplierSubmit(e) {
         }
     } catch (error) {
         alert('Error updating supplier product: ' + error.message);
+    } finally {
+        // Restore button state
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('loading');
+        submitBtn.innerHTML = originalText;
     }
 }
 
 // Confirm delete supplier
 async function confirmDeleteSupplier() {
     const supplierCode = document.getElementById('delete-supplier-code').value;
+const deleteBtn = document.querySelector('#deleteSupplierModal .btn-danger');
+    const originalText = deleteBtn.innerHTML;
+    
+    // Add loading state
+    deleteBtn.disabled = true;
+    deleteBtn.classList.add('loading');
+    deleteBtn.innerHTML = 'Loading...';
     
     try {
         const response = await fetch(SUPPLIER_DATABASE_URL, {
@@ -3371,6 +3455,11 @@ async function confirmDeleteSupplier() {
         }
     } catch (error) {
         alert('Error deleting supplier product: ' + error.message);
+    } finally {
+        // Restore button state
+        deleteBtn.disabled = false;
+        deleteBtn.classList.remove('loading');
+        deleteBtn.innerHTML = originalText;
     }
 }
 
@@ -3694,6 +3783,14 @@ function closeDeleteOrderModal() {
 
 document.getElementById('editOrderForm').addEventListener('submit', async function(e) {
     e.preventDefault();
+
+const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    // Add loading state
+    submitBtn.disabled = true;
+    submitBtn.classList.add('loading');
+    submitBtn.innerHTML = 'Loading...';
     
     const formData = new FormData(e.target);
     const orderData = {
@@ -3746,17 +3843,30 @@ document.getElementById('editOrderForm').addEventListener('submit', async functi
         }
     } catch (error) {
         alert('Error updating order: ' + error.message);
+    } finally {
+        // Restore button state
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('loading');
+        submitBtn.innerHTML = originalText;
     }
 });
 
 // Confirm delete order
 async function confirmDeleteOrder() {
     const billCode = document.getElementById('delete-order-billcode').value;
+const deleteBtn = document.querySelector('#deleteOrderModal .btn-danger');
+    const originalText = deleteBtn.innerHTML;
+    
     
     if (!billCode) {
         alert('Cannot delete order: Missing Bill Code');
         return;
     }
+
+// Add loading state
+    deleteBtn.disabled = true;
+    deleteBtn.classList.add('loading');
+    deleteBtn.innerHTML = 'Loading...';
     
     try {
         const response = await fetch(ORDER_DATABASE_URL, {
@@ -3782,6 +3892,11 @@ async function confirmDeleteOrder() {
         }
     } catch (error) {
         alert('Error deleting order: ' + error.message);
+    } finally {
+        // Restore button state
+        deleteBtn.disabled = false;
+        deleteBtn.classList.remove('loading');
+        deleteBtn.innerHTML = originalText;
     }
 }
 
@@ -3908,7 +4023,15 @@ function deleteAgent(agentId) {
         // Handle edit form submission
         document.getElementById('editProductForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
+
+const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    // Add loading state
+    submitBtn.disabled = true;
+    submitBtn.classList.add('loading');
+    submitBtn.innerHTML = 'Loading...';
+    
             const formData = {
                 action: 'update',
                 code: document.getElementById('edit-product-code').value,
@@ -3944,12 +4067,24 @@ function deleteAgent(agentId) {
                 }
             } catch (error) {
                 alert('Error updating product: ' + error.message);
-            }
+            } finally {
+        // Restore button state
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('loading');
+        submitBtn.innerHTML = originalText;
+    }
         });
 
  // Confirm delete product
         async function confirmDeleteProduct() {
             const productCode = document.getElementById('delete-product-code').value;
+ const deleteBtn = document.querySelector('#deleteProductModal .btn-danger');
+    const originalText = deleteBtn.innerHTML;
+    
+    // Add loading state
+    deleteBtn.disabled = true;
+    deleteBtn.classList.add('loading');
+    deleteBtn.innerHTML = 'Loading...';
             
             try {
                 const response = await fetch(PRODUCT_DATABASE_URL, {
@@ -3975,7 +4110,12 @@ function deleteAgent(agentId) {
                 }
             } catch (error) {
                 alert('Error deleting product: ' + error.message);
-            }
+            } finally {
+        // Restore button state
+        deleteBtn.disabled = false;
+        deleteBtn.classList.remove('loading');
+        deleteBtn.innerHTML = originalText;
+    }
         }
 
         // Add event listeners for URL preview updates
@@ -4028,6 +4168,14 @@ function toggleAddProductForm() {
 // Handle add product form submission
 async function handleAddProductSubmit(e) {
     e.preventDefault();
+
+const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    // Add loading state
+    submitBtn.disabled = true;
+    submitBtn.classList.add('loading');
+    submitBtn.innerHTML = 'Loading...';
     
     const formData = new FormData(e.target);
     const productData = {
@@ -4075,6 +4223,11 @@ async function handleAddProductSubmit(e) {
         }
     } catch (error) {
         alert('Error adding product: ' + error.message);
+    } finally {
+        // Restore button state
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('loading');
+        submitBtn.innerHTML = originalText;
     }
 }
 
@@ -4105,7 +4258,15 @@ function closeDeleteAgentModal() {
 // Handle add agent form submission
 document.getElementById('addAgentForm').addEventListener('submit', async function(e) {
     e.preventDefault();
-    
+
+const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+
+  // Add loading state
+    submitBtn.disabled = true;
+    submitBtn.classList.add('loading');
+    submitBtn.innerHTML = 'Loading...';
+
     const formData = new FormData(e.target);
     const agentData = {
     action: 'add',
@@ -4149,13 +4310,26 @@ document.getElementById('addAgentForm').addEventListener('submit', async functio
         }
     } catch (error) {
         alert('Error adding agent: ' + error.message);
+    } finally {
+        // Restore button state
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('loading');
+        submitBtn.innerHTML = originalText;
     }
 });
 
 // Handle edit agent form submission
 document.getElementById('editAgentForm').addEventListener('submit', async function(e) {
     e.preventDefault();
+
+ const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
     
+    // Add loading state
+    submitBtn.disabled = true;
+    submitBtn.classList.add('loading');
+    submitBtn.innerHTML = 'Loading...';
+
     const formData = new FormData(e.target);
     const agentData = {
     action: 'update',
@@ -4200,17 +4374,29 @@ document.getElementById('editAgentForm').addEventListener('submit', async functi
         }
     } catch (error) {
         alert('Error updating agent: ' + error.message);
+    } finally {
+        // Restore button state
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('loading');
+        submitBtn.innerHTML = originalText;
     }
 });
 
 // Confirm delete agent
 async function confirmDeleteAgent() {
     const timestamp = document.getElementById('delete-agent-timestamp').value;
+ const deleteBtn = document.querySelector('#deleteAgentModal .btn-danger');
+    const originalText = deleteBtn.innerHTML;
     
     if (!timestamp) {
         alert('Cannot delete agent: Missing timestamp');
         return;
     }
+
+  // Add loading state
+    deleteBtn.disabled = true;
+    deleteBtn.classList.add('loading');
+    deleteBtn.innerHTML = 'Loading...';
     
     try {
         const response = await fetch(AGENT_DATABASE_URL, {
@@ -4236,6 +4422,11 @@ async function confirmDeleteAgent() {
         }
     } catch (error) {
         alert('Error deleting agent: ' + error.message);
+    } finally {
+        // Restore button state
+        deleteBtn.disabled = false;
+        deleteBtn.classList.remove('loading');
+        deleteBtn.innerHTML = originalText;
     }
 }
 
