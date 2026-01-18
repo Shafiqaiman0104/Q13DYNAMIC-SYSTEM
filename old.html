@@ -256,7 +256,7 @@
         .data-table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 1200px;
+            min-width: 1300px;
         }
 
         .data-table th {
@@ -993,6 +993,8 @@
                             <th>Delivery</th>
                             <th>UserId</th>
                             <th>Commission</th>
+                            <th>Downline</th>
+                            <th>Upline Commission</th>
                             <th>Supplier</th>
                             <th>Profit</th>
                             <th>Remark</th>
@@ -1035,6 +1037,8 @@
         <th>Type</th>
         <th>Bank Name</th>
         <th>Bank Account Number</th>
+        <th>Upline</th>
+        <th>Downline Status</th>
         <th>Timestamp</th>
         <th>Actions</th>
     </tr>
@@ -1383,6 +1387,8 @@
                     <th>Total Spin Prize (RM)</th>
                     <th>Total Price (RM)</th>
                     <th>Total Commission (RM)</th>
+                    <th>Downline</th>
+                    <th>Total Upline Commission (RM)</th>
                     <th>Total Supplier (RM)</th>
                     <th>Total Profit (RM)</th>
                 </tr>
@@ -1675,6 +1681,20 @@
         <input type="text" class="form-input" id="new-agent-bank-account" name="bankAccount" disabled>
     </div>
 </div>
+<!-- ADD THESE NEW FIELDS -->
+<div class="form-row">
+    <div class="form-group">
+        <label class="form-label" for="new-agent-upline">Upline</label>
+        <input type="text" class="form-input" id="new-agent-upline" name="upline" placeholder="Enter Upline Agent ID" disabled>
+    </div>
+    <div class="form-group">
+        <label class="form-label" for="new-agent-downline-status">Downline Status</label>
+        <select class="form-input" id="new-agent-downline-status" name="downlineStatus" disabled>
+            <option value="unqualified">Unqualified</option>
+            <option value="qualified">Qualified</option>
+        </select>
+    </div>
+</div>
 
             <div class="form-actions">
                 <button type="button" class="btn btn-secondary" onclick="closeAddAgentModal()">Cancel</button>
@@ -1746,6 +1766,20 @@
     <div class="form-group">
         <label class="form-label" for="edit-agent-bank-account">Bank Account Number</label>
         <input type="text" class="form-input" id="edit-agent-bank-account" name="bankAccount">
+    </div>
+</div>
+<!-- ADD THESE NEW FIELDS -->
+<div class="form-row">
+    <div class="form-group">
+        <label class="form-label" for="edit-agent-upline">Upline</label>
+        <input type="text" class="form-input" id="edit-agent-upline" name="upline" placeholder="Enter Upline Agent ID">
+    </div>
+    <div class="form-group">
+        <label class="form-label" for="edit-agent-downline-status">Downline Status</label>
+        <select class="form-input" id="edit-agent-downline-status" name="downlineStatus">
+            <option value="unqualified">Unqualified</option>
+            <option value="qualified">Qualified</option>
+        </select>
     </div>
 </div>
 
@@ -1901,6 +1935,10 @@
                     <label class="form-label" for="edit-order-userid">User ID</label>
                     <input type="text" class="form-input" id="edit-order-userid" name="userid" disabled style="background-color: #f5f5f5;">
                 </div>
+<div class="form-group">
+        <label class="form-label" for="edit-order-downline">Downline</label>
+        <input type="text" class="form-input" id="edit-order-downline" name="downline" placeholder="Enter Downline Agent ID">
+    </div>
                 <div class="form-group">
                     <label class="form-label" for="edit-order-remark">Remark</label>
                     <textarea class="form-input" id="edit-order-remark" name="remark" rows="2"></textarea>
@@ -2780,7 +2818,14 @@ const supplierTotal = supplierCost * productQuantity;
 const toyyibpayFee = 1; // RM1 per order for payment gateway
 const profit = total - postageFee - toyyibpayFee - commission - supplierTotal;
                 
-               row.innerHTML = `
+// Get downline and downline commission
+const downline = escapeHtml(order.Downline || '');
+const downlineCommission = calculateDownlineCommission(downline, agentsData);
+
+// Recalculate profit with downline commission
+const newProfit = total - postageFee - toyyibpayFee - commission - supplierTotal - downlineCommission;
+
+row.innerHTML = `
     <td>${timestamp}</td>
     <td>${name}</td>
     <td>${contactInfo}</td>
@@ -2796,21 +2841,22 @@ const profit = total - postageFee - toyyibpayFee - commission - supplierTotal;
     <td>${billCode}</td>
     <td><span class="status ${deliveryClass}">${deliveryStatus}</span></td>
     <td>${userId}</td>
-    <!-- ADD THESE 3 COLUMNS HERE -->
     <td>RM ${commission.toFixed(2)}</td>
+    <td>${downline}</td>
+    <td>RM ${downlineCommission.toFixed(2)}</td>
     <td>RM ${supplierTotal.toFixed(2)}</td>
-    <td>RM ${profit.toFixed(2)}</td>
+    <td>RM ${newProfit.toFixed(2)}</td>
     <td><div class="compact-text" title="${remark}">${remark}</div></td>
     <td>
-            <button class="action-btn edit" onclick="editOrder('${billCode}')">
-        <i class="fas fa-edit"></i>
-    </button>
-    <button class="action-btn delete" onclick="deleteOrder('${billCode}')">
-        <i class="fas fa-trash"></i>
-    </button>
-    <button class="action-btn" onclick="sendWhatsAppMessage(${escapeJs(name)}, ${escapeJs(phone)}, ${escapeJs(email)}, ${escapeJs(address)}, ${escapeJs(productCode)}, ${escapeJs(productName)}, ${productQuantity}, ${escapeJs(note || 'None')}, ${escapeJs(discountCode)}, ${escapeJs(spinPrize)}, ${postageFee}, ${total}, ${escapeJs(billCode)}, ${escapeJs(userId)})" style="background-color: #25D366;">
-        <i class="fab fa-whatsapp"></i>
-    </button>
+        <button class="action-btn edit" onclick="editOrder('${billCode}')">
+            <i class="fas fa-edit"></i>
+        </button>
+        <button class="action-btn delete" onclick="deleteOrder('${billCode}')">
+            <i class="fas fa-trash"></i>
+        </button>
+        <button class="action-btn" onclick="sendWhatsAppMessage(${escapeJs(name)}, ${escapeJs(phone)}, ${escapeJs(email)}, ${escapeJs(address)}, ${escapeJs(productCode)}, ${escapeJs(productName)}, ${productQuantity}, ${escapeJs(note || 'None')}, ${escapeJs(discountCode)}, ${escapeJs(spinPrize)}, ${postageFee}, ${total}, ${escapeJs(billCode)}, ${escapeJs(userId)})" style="background-color: #25D366;">
+            <i class="fab fa-whatsapp"></i>
+        </button>
     </td>
 `;
                 
@@ -2843,7 +2889,7 @@ const profit = total - postageFee - toyyibpayFee - commission - supplierTotal;
             if (!agentsData || agentsData.length === 0) {
                 tableBody.innerHTML = `
                     <tr>
-                        <td colspan="11" style="text-align: center; padding: 2rem;">
+                        <td colspan="13" style="text-align: center; padding: 2rem;">
                             <i class="fas fa-exclamation-circle" style="font-size: 2rem; color: #6c757d; margin-bottom: 1rem;"></i>
                             <p>No agents data available.</p>
                         </td>
@@ -2872,7 +2918,11 @@ const profit = total - postageFee - toyyibpayFee - commission - supplierTotal;
                 const bankName = escapeHtml(agent['Bank Name'] || 'n/a');
                 const bankAccount = escapeHtml(agent['Bank Account Number'] || 'n/a');
                 
-                row.innerHTML = `
+                // Get Upline and Downline Status values
+const upline = escapeHtml(agent.Upline || '');
+const downlineStatus = escapeHtml(agent['Downline Status'] || 'unqualified');
+
+row.innerHTML = `
     <td>${agentId}</td>
     <td>${name}</td>
     <td>${phone}</td>
@@ -2882,6 +2932,8 @@ const profit = total - postageFee - toyyibpayFee - commission - supplierTotal;
     <td><span class="status ${type === 'premium' ? 'delivered' : 'pending'}">${type}</span></td>
     <td>${bankName}</td>
     <td>${bankAccount}</td>
+    <td>${upline}</td>
+    <td><span class="status ${downlineStatus === 'qualified' ? 'delivered' : 'pending'}">${downlineStatus}</span></td>
     <td>${formatDate(agent.Timestamp || agent.Timestamp)}</td>
     <td>
         <button class="action-btn edit" onclick="editAgent('${agentId}')">
@@ -3565,6 +3617,7 @@ async function editOrder(billCode) {
         document.getElementById('bill-code-message').style.display = 'none'; // Hide message
         document.getElementById('edit-order-delivery-status').value = order.deliveryStatus || 'pending';
         document.getElementById('edit-order-userid').value = order.userId || '';
+        document.getElementById('edit-order-downline').value = order.downline || '';
         document.getElementById('edit-order-remark').value = order.remark || '';
         
         // Show the modal
@@ -3662,6 +3715,7 @@ document.getElementById('editOrderForm').addEventListener('submit', async functi
         total: document.getElementById('edit-order-total').value,
         paymentStatus: document.getElementById('edit-order-payment-status').value,
         deliveryStatus: document.getElementById('edit-order-delivery-status').value,
+        downline: document.getElementById('edit-order-downline').value,
         remark: document.getElementById('edit-order-remark').value
     };
     
@@ -3752,6 +3806,8 @@ document.getElementById('edit-agent-status').value = agent.Status || 'pending';
 document.getElementById('edit-agent-type').value = agent.Type || 'basic';
 document.getElementById('edit-agent-bank-name').value = agent['Bank Name'] || 'n/a';
 document.getElementById('edit-agent-bank-account').value = agent['Bank Account Number'] || 'n/a';
+document.getElementById('edit-agent-upline').value = agent.Upline || '';
+document.getElementById('edit-agent-downline-status').value = agent['Downline Status'] || 'unqualified';
     
     // Display timestamp (disabled field)
     document.getElementById('edit-agent-timestamp-display').value = formatDate(agent.Timestamp || '');
@@ -4061,7 +4117,9 @@ document.getElementById('addAgentForm').addEventListener('submit', async functio
     status: formData.get('status') || 'pending',
     type: formData.get('type') || 'basic',
     bankName: formData.get('bankName') || 'n/a',
-    bankAccount: formData.get('bankAccount') || 'n/a'
+    bankAccount: formData.get('bankAccount') || 'n/a',
+    upline: formData.get('upline') || '', 
+    downlineStatus: formData.get('downlineStatus') || 'unqualified' 
 };
     
     // Validate required fields
@@ -4110,7 +4168,9 @@ document.getElementById('editAgentForm').addEventListener('submit', async functi
     status: formData.get('status') || 'pending',
     type: formData.get('type') || 'basic',
     bankName: formData.get('bankName') || 'n/a',
-    bankAccount: formData.get('bankAccount') || 'n/a'
+    bankAccount: formData.get('bankAccount') || 'n/a',
+    upline: formData.get('upline') || '', 
+    downlineStatus: formData.get('downlineStatus') || 'unqualified' 
 };
     
     // Validate required fields
@@ -4220,6 +4280,31 @@ function getAgentCommissionMultiplier(userId, agentsData) {
     return 0; // Change from 1 to 0: Default fallback - no commission
 }
 
+// Function to calculate downline commission
+function calculateDownlineCommission(downlineId, agentsData) {
+    if (!downlineId || !agentsData) return 0;
+    
+    // Find the downline agent in agents data
+    const downlineAgent = agentsData.find(a => 
+        a['Agent ID'] === downlineId || 
+        a['Agent ID '] === downlineId
+    );
+    
+    if (!downlineAgent) return 0;
+    
+    // Get agent type
+    const agentType = downlineAgent.Type || 'basic';
+    
+    // Calculate commission based on type
+    if (agentType.toLowerCase() === 'basic') {
+        return 5; // RM5 per order
+    } else if (agentType.toLowerCase() === 'premium') {
+        return 10; // RM10 per order
+    }
+    
+    return 0;
+}
+
 // Function to get supplier cost for a product
 function getSupplierCost(productCode, suppliersData) {
     if (!suppliersData) return 0;
@@ -4325,6 +4410,7 @@ async function calculateAgentSales() {
             if (!agentSales[userId]) {
                 agentSales[userId] = {
                     userId: userId,
+                    downline: order.Downline || '', // Add this line
                     totalOrders: 0,
                     totalQty: 0,
                     totalPostage: 0,
@@ -4332,6 +4418,7 @@ async function calculateAgentSales() {
                     totalSpinPrize: 0,
                     totalPrice: 0,
                     totalCommission: 0,
+                    totalDownlineCommission: 0, // ADD THIS LINE
                     totalSupplier: 0,
                     totalProfit: 0
                 };
@@ -4364,6 +4451,11 @@ async function calculateAgentSales() {
             
             // Get product code
             const productCode = order['Product Code'] || '';
+
+// Calculate downline commission for this order
+const downlineId = order.Downline || '';
+const downlineCommission = calculateDownlineCommission(downlineId, agentsData);
+agent.totalDownlineCommission = (agent.totalDownlineCommission || 0) + downlineCommission;
             
             // Calculate commission based on supplier database AND agent status/type
 const commissionRate = getCommissionRate(productCode, suppliersData);
@@ -4377,10 +4469,17 @@ agent.totalCommission += commission;
         }
         
         // Calculate profit for each agent
-        Object.values(agentSales).forEach(agent => {
-            // Total Profit = Total Price - Total Orders (RM1 per order) - Total Commission - Total Postage - Total Supplier
-            agent.totalProfit = agent.totalPrice - agent.totalOrders - agent.totalCommission - agent.totalPostage - agent.totalSupplier;
-        });
+Object.values(agentSales).forEach(agent => {
+    // Total Profit = Total Price - Total Orders (RM1 per order) - Total Commission - Total Postage - Total Supplier - Total Downline Commission
+    // We need to calculate downline commission for each order
+    // For simplicity, we'll recalculate here or modify the loop above
+    
+    // Recalculate with downline commission included
+    let totalDownlineCommission = 0;
+    // You might want to track this in the loop above instead
+    // For now, we'll use the existing calculation
+    agent.totalProfit = agent.totalPrice - agent.totalOrders - agent.totalCommission - agent.totalPostage - agent.totalSupplier - (agent.totalDownlineCommission || 0);
+});
         
         // Display the data
         displayAgentSales(agentSales);
@@ -4418,20 +4517,22 @@ function displayAgentSales(agentSales) {
         const row = document.createElement('tr');
         
         row.innerHTML = `
-            <td><strong>${escapeHtml(agent.userId)}</strong></td>
-            <td>${agent.totalOrders}</td>
-            <td>${agent.totalQty}</td>
-            <td>RM ${agent.totalPostage.toFixed(2)}</td>
-            <td>RM ${agent.totalDiscount.toFixed(2)}</td>
-            <td>RM ${agent.totalSpinPrize.toFixed(2)}</td>
-            <td>RM ${agent.totalPrice.toFixed(2)}</td>
-            <td>RM ${agent.totalCommission.toFixed(2)}</td>
-            <td>RM ${agent.totalSupplier.toFixed(2)}</td>
-            <td><strong>RM ${agent.totalProfit.toFixed(2)}</strong></td>
-        `;
+    <td><strong>${escapeHtml(agent.userId)}</strong></td>
+    <td>${agent.totalOrders}</td>
+    <td>${agent.totalQty}</td>
+    <td>RM ${agent.totalPostage.toFixed(2)}</td>
+    <td>RM ${agent.totalDiscount.toFixed(2)}</td>
+    <td>RM ${agent.totalSpinPrize.toFixed(2)}</td>
+    <td>RM ${agent.totalPrice.toFixed(2)}</td>
+    <td>RM ${agent.totalCommission.toFixed(2)}</td>
+    <td>${escapeHtml(agent.downline || '')}</td>
+    <td>RM ${(agent.totalDownlineCommission || 0).toFixed(2)}</td>
+    <td>RM ${agent.totalSupplier.toFixed(2)}</td>
+    <td><strong>RM ${agent.totalProfit.toFixed(2)}</strong></td>
+`;
         
         // Highlight profit column
-        const profitCell = row.cells[9];
+        const profitCell = row.cells[11];
         if (agent.totalProfit > 0) {
             profitCell.style.color = '#28a745';
             profitCell.style.fontWeight = 'bold';
@@ -4474,13 +4575,13 @@ async function exportSalesToCSV() {
         }
         filename += '.csv';
         
-        // CSV header
-        let csv = 'User ID,Total Orders,Total Qty Product,Total Postage (RM),Total Discount Code (RM),Total Spin Prize (RM),Total Price (RM),Total Commission (RM),Total Supplier (RM),Total Profit (RM)\n';
+        // CSV header - ADD Downline Commission column
+let csv = 'User ID,Total Orders,Total Qty Product,Total Postage (RM),Total Discount Code (RM),Total Spin Prize (RM),Total Price (RM),Total Commission (RM),Downline,Total Upline Commission (RM),Total Supplier (RM),Total Profit (RM)\n';
         
         // CSV data
-        agentsArray.forEach(agent => {
-            csv += `"${agent.userId}",${agent.totalOrders},${agent.totalQty},${agent.totalPostage.toFixed(2)},${agent.totalDiscount.toFixed(2)},${agent.totalSpinPrize.toFixed(2)},${agent.totalPrice.toFixed(2)},${agent.totalCommission.toFixed(2)},${agent.totalSupplier.toFixed(2)},${agent.totalProfit.toFixed(2)}\n`;
-        });
+agentsArray.forEach(agent => {
+    csv += `"${agent.userId}",${agent.totalOrders},${agent.totalQty},${agent.totalPostage.toFixed(2)},${agent.totalDiscount.toFixed(2)},${agent.totalSpinPrize.toFixed(2)},${agent.totalPrice.toFixed(2)},${agent.totalCommission.toFixed(2)},"${agent.downline || ''}",${(agent.totalDownlineCommission || 0).toFixed(2)},${agent.totalSupplier.toFixed(2)},${agent.totalProfit.toFixed(2)}\n`;
+});
         
         // Create download link
         const blob = new Blob([csv], { type: 'text/csv' });
